@@ -46,7 +46,9 @@ async def process_telegram_update(update: dict[str, Any], session: AsyncSession)
         data = callback.get("data", "")
         user = await get_user_by_chat_id(session, chat_id)
         if user is None:
-            await telegram.answer_callback_query(callback["id"], "Link your account from the web app first.")
+            await telegram.answer_callback_query(
+                callback["id"], "Link your account from the web app first."
+            )
             return
         if data.startswith("act:"):
             parts = data.split(":")
@@ -57,7 +59,9 @@ async def process_telegram_update(update: dict[str, Any], session: AsyncSession)
             if status not in {"saved", "applied", "skipped"}:
                 await telegram.answer_callback_query(callback["id"], "Invalid action.")
                 return
-            message = await handle_job_action_callback(session, user, int(notification_id_raw), status)
+            message = await handle_job_action_callback(
+                session, user, int(notification_id_raw), status
+            )
             await telegram.answer_callback_query(callback["id"], message)
             original_text = callback["message"].get("text", "")
             await telegram.edit_message_text(
@@ -84,7 +88,9 @@ async def process_telegram_update(update: dict[str, Any], session: AsyncSession)
                     "Use Save / Applied / Skip on each job message.",
                 )
             else:
-                await telegram.send_message(chat_id, "Invalid or expired link token. Generate a new link from the web app.")
+                await telegram.send_message(
+                    chat_id, "Invalid or expired link token. Generate a new link from the web app."
+                )
             return
         await telegram.send_message(
             chat_id,

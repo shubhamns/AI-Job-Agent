@@ -31,4 +31,3 @@ def test_profile_and_job_preferences_are_editable(client, auth_headers) -> None:
     assert preference_response.status_code == 200
     assert preference_response.json()["desired_titles"] == ["Backend Engineer"]
     assert preference_response.json()["salary_min"] == 150000
-

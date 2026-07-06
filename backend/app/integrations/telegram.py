@@ -74,7 +74,9 @@ class TelegramClient:
             payload["reply_markup"] = reply_markup
         await self._post("editMessageText", payload)
 
-    async def get_updates(self, offset: int | None = None, timeout: int = 30) -> list[dict[str, Any]]:
+    async def get_updates(
+        self, offset: int | None = None, timeout: int = 30
+    ) -> list[dict[str, Any]]:
         payload: dict[str, Any] = {"timeout": timeout}
         if offset is not None:
             payload["offset"] = offset

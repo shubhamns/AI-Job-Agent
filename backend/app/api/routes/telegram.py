@@ -1,7 +1,11 @@
 from fastapi import APIRouter, Header, HTTPException, Request, status
 
 from app.api.deps import AppSettings, CurrentUser, DbSession
-from app.schemas.telegram import TelegramLinkResponse, TelegramSettingsRequest, TelegramStatusResponse
+from app.schemas.telegram import (
+    TelegramLinkResponse,
+    TelegramSettingsRequest,
+    TelegramStatusResponse,
+)
 from app.services.scheduler import get_telegram_client, process_telegram_update
 from app.services.telegram_service import generate_link_token
 
@@ -16,12 +20,19 @@ async def create_telegram_link(
 ) -> TelegramLinkResponse:
     telegram = get_telegram_client(settings)
     if telegram is None:
-        raise HTTPException(status_code=status.HTTP_503_SERVICE_UNAVAILABLE, detail="Telegram bot is not configured.")
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Telegram bot is not configured.",
+        )
     token = await generate_link_token(session, user)
     username = await telegram.bot_username()
     if username:
-        return TelegramLinkResponse(link_url=f"https://t.me/{username}?start={token}", bot_username=username)
-    return TelegramLinkResponse(link_url=f"https://t.me/share/url?url=start%20{token}", bot_username=None)
+        return TelegramLinkResponse(
+            link_url=f"https://t.me/{username}?start={token}", bot_username=username
+        )
+    return TelegramLinkResponse(
+        link_url=f"https://t.me/share/url?url=start%20{token}", bot_username=None
+    )
 
 
 @router.get("/status", response_model=TelegramStatusResponse)
@@ -61,9 +72,13 @@ async def telegram_webhook(
     secret: str | None = Header(default=None, alias="X-Telegram-Bot-Api-Secret-Token"),
 ) -> dict[str, bool]:
     if settings.telegram_mode != "webhook":
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Webhook mode is disabled.")
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND, detail="Webhook mode is disabled."
+        )
     if settings.telegram_webhook_secret and secret != settings.telegram_webhook_secret:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook secret.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid webhook secret."
+        )
     update = await request.json()
     await process_telegram_update(update, session)
     return {"ok": True}

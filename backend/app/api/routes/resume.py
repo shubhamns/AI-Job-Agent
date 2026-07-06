@@ -6,7 +6,10 @@ from app.api.deps import AppSettings, CurrentUser, DbSession
 from app.models.resume_document import ResumeDocument
 from app.schemas.profile import CandidateProfileResponse
 from app.schemas.resume import ResumeUploadResponse
-from app.services.profile_service import apply_candidate_profile_update, extract_basic_candidate_profile
+from app.services.profile_service import (
+    apply_candidate_profile_update,
+    extract_basic_candidate_profile,
+)
 from app.services.resume_service import process_resume_upload
 
 router = APIRouter(prefix="/resumes", tags=["resumes"])

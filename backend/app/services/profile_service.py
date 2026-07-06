@@ -39,16 +39,39 @@ SUMMARY_HEADERS = (
 )
 LOCATION_HEADERS = ("location", "address", "based in", "current location")
 AUTH_HEADERS = ("work authorization", "authorization", "visa status", "work permit")
-WORK_ARRANGEMENT_ONLY = frozenset({"remote", "hybrid", "onsite", "on-site", "onsite-only", "remote-only", "hybrid-only", "wfh", "work", "from", "home", "only", "first"})
+WORK_ARRANGEMENT_ONLY = frozenset(
+    {
+        "remote",
+        "hybrid",
+        "onsite",
+        "on-site",
+        "onsite-only",
+        "remote-only",
+        "hybrid-only",
+        "wfh",
+        "work",
+        "from",
+        "home",
+        "only",
+        "first",
+    }
+)
 CONTACT_HEADERS = ("mobile", "phone", "email", "contact", "tel")
-SECTION_PREFIXES = SKILL_HEADERS + SUMMARY_HEADERS + LOCATION_HEADERS + AUTH_HEADERS + CONTACT_HEADERS + (
-    "experience",
-    "work experience",
-    "employment",
-    "education",
-    "projects",
-    "certifications",
-    "contact",
+SECTION_PREFIXES = (
+    SKILL_HEADERS
+    + SUMMARY_HEADERS
+    + LOCATION_HEADERS
+    + AUTH_HEADERS
+    + CONTACT_HEADERS
+    + (
+        "experience",
+        "work experience",
+        "employment",
+        "education",
+        "projects",
+        "certifications",
+        "contact",
+    )
 )
 
 
@@ -173,7 +196,11 @@ def extract_basic_candidate_profile(resume_text: str) -> CandidateProfileExtract
             chunk.extend(body)
             for item in chunk:
                 for skill in _split_skill_items(item):
-                    if skill and _is_skill_item(skill) and skill.lower() not in {s.lower() for s in skills}:
+                    if (
+                        skill
+                        and _is_skill_item(skill)
+                        and skill.lower() not in {s.lower() for s in skills}
+                    ):
                         skills.append(skill[:120])
         elif header in SUMMARY_HEADERS:
             parts = [inline_value] if inline_value else []
@@ -221,7 +248,10 @@ def extract_basic_candidate_profile(resume_text: str) -> CandidateProfileExtract
     if not work_authorization:
         for line in lines:
             lower = line.lower()
-            if any(token in lower for token in ("citizen", "visa", "authorized to work", "work permit", "h1b", "gc")):
+            if any(
+                token in lower
+                for token in ("citizen", "visa", "authorized to work", "work permit", "h1b", "gc")
+            ):
                 if _is_work_authorization_value(line):
                     work_authorization = line[:255]
                 break

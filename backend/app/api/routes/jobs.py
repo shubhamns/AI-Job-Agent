@@ -92,4 +92,3 @@ async def clear_tracked_jobs(
 ) -> dict[str, int]:
     cleared = await clear_job_interactions(session, user, status=status_filter)
     return {"cleared": cleared}
-

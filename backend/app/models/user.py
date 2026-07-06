@@ -28,8 +28,12 @@ class User(Base):
         default=True,
         server_default="true",
     )
-    telegram_chat_id: Mapped[int | None] = mapped_column(BigInteger, nullable=True, unique=True, index=True)
-    telegram_link_token: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
+    telegram_chat_id: Mapped[int | None] = mapped_column(
+        BigInteger, nullable=True, unique=True, index=True
+    )
+    telegram_link_token: Mapped[str | None] = mapped_column(
+        String(64), nullable=True, unique=True, index=True
+    )
     notifications_enabled: Mapped[bool] = mapped_column(
         Boolean,
         nullable=False,

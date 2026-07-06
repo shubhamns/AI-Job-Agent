@@ -10,10 +10,13 @@ from app.models import User  # noqa: F401
 config = context.config
 settings = get_settings()
 
+
 def migration_url(url: str) -> str:
     if url.startswith("sqlite+aiosqlite"):
         return url.replace("sqlite+aiosqlite", "sqlite", 1)
     return url.replace("+asyncpg", "+psycopg")
+
+
 if settings.database_url:
     config.set_main_option("sqlalchemy.url", migration_url(settings.database_url))
 

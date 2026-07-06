@@ -9,7 +9,13 @@ from app.core.security import (
     verify_password,
 )
 from app.models.user import User
-from app.schemas.auth import LoginRequest, RefreshRequest, TokenResponse, UserCreateRequest, UserResponse
+from app.schemas.auth import (
+    LoginRequest,
+    RefreshRequest,
+    TokenResponse,
+    UserCreateRequest,
+    UserResponse,
+)
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -54,7 +60,9 @@ async def refresh_tokens(
     token_payload = decode_token(payload.refresh_token, settings, "refresh")
     user = await session.scalar(select(User).where(User.email == token_payload["sub"]))
     if not user or not user.is_active:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token.")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid refresh token."
+        )
     access_token, refresh_token = create_token_pair(user.email, settings)
     return TokenResponse(access_token=access_token, refresh_token=refresh_token)
 

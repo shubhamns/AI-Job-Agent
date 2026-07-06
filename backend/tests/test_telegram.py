@@ -10,8 +10,10 @@ def _auth_headers(client, email: str, password: str) -> dict[str, str]:
 @patch("app.api.routes.telegram.get_telegram_client")
 def test_telegram_link(mock_get_client, client) -> None:
     mock_telegram = AsyncMock()
+
     async def bot_username() -> str:
         return "ai_job_agent_bot"
+
     mock_telegram.bot_username = bot_username
     mock_get_client.return_value = mock_telegram
     headers = _auth_headers(client, "telegram@example.com", "supersecret123")
@@ -27,8 +29,10 @@ def test_telegram_link(mock_get_client, client) -> None:
 @patch("app.services.scheduler.get_telegram_client")
 def test_telegram_webhook_links_account(mock_get_client, client, test_settings) -> None:
     mock_telegram = AsyncMock()
+
     async def bot_username() -> str:
         return "ai_job_agent_bot"
+
     mock_telegram.bot_username = bot_username
     mock_telegram.send_message = AsyncMock(return_value=1)
     mock_get_client.return_value = mock_telegram
@@ -50,8 +54,10 @@ def test_telegram_webhook_links_account(mock_get_client, client, test_settings) 
 @patch("app.services.scheduler.get_telegram_client")
 def test_telegram_settings_update(mock_get_client, client, test_settings) -> None:
     mock_telegram = AsyncMock()
+
     async def bot_username() -> str:
         return "ai_job_agent_bot"
+
     mock_telegram.bot_username = bot_username
     mock_telegram.send_message = AsyncMock(return_value=1)
     mock_get_client.return_value = mock_telegram

@@ -64,8 +64,7 @@ def locations_match(preferred_location: str, job: NormalizedJob) -> bool:
     job_text = normalize_value(job.location_display or "")
     job_areas = {normalize_value(area) for area in job.location_area}
     return any(
-        token in job_text
-        or any(token in area or area in token for area in job_areas)
+        token in job_text or any(token in area or area in token for area in job_areas)
         for token in preferred_tokens
     )
 
@@ -156,7 +155,9 @@ async def fetch_and_rank_job_matches(
     remote_type_filters = parse_remote_type_filters(remote_types)
     if remote_type_filters:
         deduped = [
-            match for match in deduped if normalize_value(match.job.remote_type) in remote_type_filters
+            match
+            for match in deduped
+            if normalize_value(match.job.remote_type) in remote_type_filters
         ]
     deduped = [match for match in deduped if match.score >= min_score]
     deduped.sort(key=lambda match: sort_key(match, sort_by))
@@ -204,7 +205,9 @@ def evaluate_hard_filters(
 
     if preference.preferred_locations:
         physical_locations = [
-            location for location in preference.preferred_locations if not is_remote_location_label(location)
+            location
+            for location in preference.preferred_locations
+            if not is_remote_location_label(location)
         ]
         wants_remote = any(
             is_remote_location_label(location) for location in preference.preferred_locations
