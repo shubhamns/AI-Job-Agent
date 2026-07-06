@@ -14,7 +14,11 @@ from app.models.job_notification import JobNotification
 from app.models.user import User
 from app.schemas.job import JobActionRequest, NormalizedJob
 from app.services.jobs.matching import fetch_and_rank_job_matches
-from app.services.jobs.tracking import apply_job_action, get_existing_interaction, list_job_interactions
+from app.services.jobs.tracking import (
+    apply_job_action,
+    get_existing_interaction,
+    list_job_interactions,
+)
 
 
 async def generate_link_token(session: AsyncSession, user: User) -> str:
@@ -25,7 +29,11 @@ async def generate_link_token(session: AsyncSession, user: User) -> str:
     return token
 
 
-async def link_telegram_account(session: AsyncSession, chat_id: int, link_token: str) -> User | None:
+async def link_telegram_account(
+    session: AsyncSession,
+    chat_id: int,
+    link_token: str,
+) -> User | None:
     user = await session.scalar(select(User).where(User.telegram_link_token == link_token))
     if user is None:
         return None
