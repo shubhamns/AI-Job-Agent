@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+@theme {
+  --color-background: oklch(0.985 0.004 264);
+  --color-foreground: oklch(0.21 0.02 264);
+  --color-card: oklch(1 0 0);
+  --color-card-foreground: oklch(0.21 0.02 264);
+  --color-primary: oklch(0.52 0.19 275);
+  --color-primary-foreground: oklch(0.99 0 0);
+  --color-secondary: oklch(0.96 0.01 275);
+  --color-secondary-foreground: oklch(0.35 0.05 275);
+  --color-muted: oklch(0.96 0.005 264);
+  --color-muted-foreground: oklch(0.52 0.02 264);
+  --color-accent: oklch(0.94 0.03 275);
+  --color-accent-foreground: oklch(0.35 0.08 275);
+  --color-destructive: oklch(0.55 0.2 25);
+  --color-border: oklch(0.91 0.01 264);
+  --color-input: oklch(0.91 0.01 264);
+  --color-ring: oklch(0.52 0.19 275);
+  --color-success: oklch(0.62 0.15 155);
+  --color-warning: oklch(0.72 0.14 75);
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.25rem;
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    background-image:
+      radial-gradient(circle at 0% 0%, oklch(0.94 0.04 275 / 0.5), transparent 42%),
+      radial-gradient(circle at 100% 0%, oklch(0.95 0.03 200 / 0.35), transparent 38%),
+      linear-gradient(180deg, oklch(0.99 0.005 264), oklch(0.97 0.008 264));
+    min-height: 100dvh;
+  }
+}
+
+@layer utilities {
+  .safe-bottom {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+  .safe-top {
+    padding-top: max(0.75rem, env(safe-area-inset-top));
+  }
+}

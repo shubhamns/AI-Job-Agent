@@ -1,0 +1,36 @@
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-ai_job_agent}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build:
+      context: ./backend
+    env_file:
+      - ./backend/.env.example
+    environment:
+      DATABASE_URL: ${AI_JOB_AGENT_DATABASE_URL:-postgresql://postgres:postgres@postgres:5432/ai_job_agent}
+    depends_on:
+      - postgres
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        API_BASE_URL: ${API_BASE_URL:-http://localhost:8000/api/v1}
+    depends_on:
+      - backend
+    ports:
+      - "3000:80"
+
+volumes:
+  postgres_data:
