@@ -168,8 +168,11 @@ export const api = {
       method: "PATCH",
       body: JSON.stringify(payload),
     }),
-  clearTrackedJobs: (status?: TrackingStatus) => {
-    const suffix = status ? `?status=${encodeURIComponent(status)}` : "";
+  clearTrackedJobs: (params?: { status?: TrackingStatus; limit?: number }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set("status", params.status);
+    if (params?.limit) searchParams.set("limit", String(params.limit));
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
     return request<{ cleared: number }>(`/jobs/tracked${suffix}`, { method: "DELETE" });
   },
   trackJob: (payload: {

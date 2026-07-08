@@ -10,6 +10,7 @@ from app.services.jobs.matching import (
     detect_technologies,
     job_text_from_payload,
     normalize_value,
+    payload_text,
     tokenize,
 )
 
@@ -100,10 +101,12 @@ def compute_outcome_intelligence(interactions: list[JobInteraction]) -> OutcomeI
     by_source: dict[str, list[JobInteraction]] = defaultdict(list)
     for item in pipeline:
         job = item.job_payload
-        role = infer_role_type(str(job.get("title", "")))
+        role = infer_role_type(payload_text(job, "title"))
         by_role[role].append(item)
         by_source[str(item.source)].append(item)
-        location = str(job.get("location_display") or job.get("remote_type") or "unknown")
+        location = payload_text(job, "location_display") or payload_text(
+            job, "remote_type", "unknown"
+        )
         by_location[normalize_value(location) or "unknown"].append(item)
         by_salary[salary_band(job)].append(item)
         skills = detect_technologies(

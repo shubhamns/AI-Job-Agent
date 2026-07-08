@@ -1,6 +1,7 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query, status
+from sqlalchemy.exc import IntegrityError
 
 from app.api.deps import AppSettings, CurrentUser, DbSession
 from app.integrations.adzuna import AdzunaConfigurationError, AdzunaJobSource
@@ -69,9 +70,8 @@ async def list_job_matches(
         ai_scoring_enabled=settings.ai_scoring_enabled,
     )
     if include_ai_score and settings.ai_scoring_enabled and response.items:
-        ai_scores = {}
         for match in response.items:
-            ai_fit = await score_job_with_ai(
+            match.ai_fit = await score_job_with_ai(
                 session,
                 settings,
                 user,
@@ -80,8 +80,6 @@ async def list_job_matches(
                 match.dedupe_key,
                 match.score,
             )
-            ai_scores[match.dedupe_key] = ai_fit
-            match.ai_fit = ai_fit
         await session.commit()
         if sort_by == "ai_score":
             response.items.sort(
@@ -161,7 +159,24 @@ async def track_job_action(
     )
     interaction = apply_job_action(interaction, user, payload)
     session.add(interaction)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        interaction = await get_existing_interaction(
+            session,
+            user,
+            source=payload.job.source,
+            source_job_id=payload.job.source_job_id,
+        )
+        if interaction is None:
+            raise HTTPException(
+                status_code=status.HTTP_409_CONFLICT,
+                detail="Could not track job. Please retry.",
+            ) from None
+        interaction = apply_job_action(interaction, user, payload)
+        session.add(interaction)
+        await session.commit()
     await session.refresh(interaction)
     return tracked_job_response(interaction)
 
@@ -171,6 +186,12 @@ async def clear_tracked_jobs(
     user: CurrentUser,
     session: DbSession,
     status_filter: str | None = Query(default=None, alias="status"),
+    limit: int | None = Query(default=None, ge=1, le=100),
 ) -> dict[str, int]:
-    cleared = await clear_job_interactions(session, user, status=status_filter)
+    cleared = await clear_job_interactions(
+        session,
+        user,
+        status=status_filter,
+        limit=limit,
+    )
     return {"cleared": cleared}

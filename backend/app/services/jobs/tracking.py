@@ -93,7 +93,21 @@ async def clear_job_interactions(
     user: User,
     *,
     status: str | None = None,
+    limit: int | None = None,
 ) -> int:
+    if limit is not None:
+        interactions = await list_job_interactions(session, user, status=status)
+        if not interactions:
+            return 0
+        ids = [item.id for item in interactions[:limit]]
+        result = await session.execute(
+            delete(JobInteraction).where(
+                JobInteraction.user_id == user.id,
+                JobInteraction.id.in_(ids),
+            )
+        )
+        await session.commit()
+        return int(result.rowcount or 0)
     stmt = delete(JobInteraction).where(JobInteraction.user_id == user.id)
     if status:
         stmt = stmt.where(JobInteraction.status == status)

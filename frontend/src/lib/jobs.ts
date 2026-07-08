@@ -33,7 +33,10 @@ export function resolveJobMatch(
   if (!jobId) {
     return null;
   }
-  const live = jobs.find((item) => item.job.source_job_id === jobId);
+  const live = jobs.find(
+    (item) =>
+      item.job.source_job_id === jobId && (!source || item.job.source === source),
+  );
   if (live) {
     return live;
   }

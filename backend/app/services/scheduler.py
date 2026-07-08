@@ -9,7 +9,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings, get_settings
-from app.db.session import AsyncSessionLocal
+from app.db.session import session_scope
 from app.integrations.telegram import TelegramClient
 from app.services.telegram_service import (
     get_user_by_chat_id,
@@ -133,7 +133,7 @@ async def _poll_telegram_updates() -> None:
             updates = await telegram.get_updates(_update_offset, timeout=30)
             for update in updates:
                 _update_offset = update["update_id"] + 1
-                async with AsyncSessionLocal() as session:
+                async with session_scope() as session:
                     await process_telegram_update(update, session)
         except asyncio.CancelledError:
             raise
@@ -157,7 +157,7 @@ async def _run_scheduled_checks(check_type: str) -> None:
     telegram = get_telegram_client(settings)
     if telegram is None or not settings.cron_enabled:
         return
-    async with AsyncSessionLocal() as session:
+    async with session_scope() as session:
         try:
             sent = await run_job_checks(session, settings, telegram, check_type=check_type)
             logger.info("Job check %s sent %s notifications", check_type, sent)

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import Settings
@@ -47,7 +48,15 @@ async def cache_ai_score(
         rationale=rationale,
         score_source=score_source,
     )
-    session.add(record)
+    try:
+        async with session.begin_nested():
+            session.add(record)
+            await session.flush()
+    except IntegrityError:
+        existing = await get_cached_ai_score(session, user, dedupe_key)
+        if existing is None:
+            raise
+        return existing
     return record
 
 

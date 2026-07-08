@@ -187,7 +187,8 @@ export function useUpdateTelegramSettings() {
 export function useClearTrackedJobs() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (status?: TrackingStatus) => api.clearTrackedJobs(status),
+    mutationFn: (params?: { status?: TrackingStatus; limit?: number }) =>
+      api.clearTrackedJobs(params),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobsRoot });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });

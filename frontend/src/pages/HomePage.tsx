@@ -20,10 +20,14 @@ export function HomePage() {
     navigate(`/jobs?${params.toString()}`);
   }
 
-  async function handleClearRecent() {
-    await toast.promise(clearTracked.mutateAsync(undefined), {
+  function handleClearRecent() {
+    const limit = statsQuery.data?.recent_activity.length ?? 0;
+    if (!limit) {
+      return;
+    }
+    void toast.promise(clearTracked.mutateAsync({ limit }), {
       loading: "Clearing recent activity...",
-      success: (result) => `Cleared ${result.cleared} tracked jobs`,
+      success: (result) => `Cleared ${result.cleared} recent jobs`,
       error: (error) => errorMessage(error, "Unable to clear activity"),
     });
   }

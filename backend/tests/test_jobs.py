@@ -4,6 +4,7 @@ from app.services.jobs.matching import (
     build_job_search_query,
     deduplicate_matches,
     evaluate_hard_filters,
+    job_text_from_payload,
     parse_remote_type_filters,
     score_job,
 )
@@ -345,3 +346,123 @@ def test_job_tracking_and_dashboard_stats_flow(client, auth_headers) -> None:
 
     stats_after_clear = client.get("/api/v1/dashboard/stats", headers=auth_headers).json()
     assert stats_after_clear["total_tracked"] == 0
+
+
+def test_job_text_from_payload_skips_null_values() -> None:
+    text = job_text_from_payload(
+        {
+            "title": "Backend Engineer",
+            "description": "Build APIs",
+            "company_name": None,
+            "category": None,
+        }
+    )
+    assert text == "Backend Engineer Build APIs"
+    assert "None" not in text
+
+
+def test_evaluate_hard_filters_rejects_remote_for_city_only_preference() -> None:
+    preference = type(
+        "Preference",
+        (),
+        {
+            "preferred_locations": ["Bangalore"],
+            "remote_preference": None,
+            "required_excluded_technologies": [],
+            "preferred_excluded_technologies": [],
+            "employment_types": [],
+            "salary_min": None,
+        },
+    )()
+    remote_job = NormalizedJob(
+        source="adzuna",
+        source_job_id="remote",
+        title="Backend Engineer",
+        company_name="Acme",
+        location_display="Remote",
+        description="Python role",
+        employment_type="permanent",
+        remote_type="remote",
+        redirect_url="https://example.com/remote",
+    )
+    decision = evaluate_hard_filters(remote_job, preference)
+    assert decision.passed is False
+
+
+def test_score_job_uses_employment_equivalence() -> None:
+    preference = type(
+        "Preference",
+        (),
+        {
+            "desired_titles": [],
+            "preferred_locations": [],
+            "remote_preference": None,
+            "required_excluded_technologies": [],
+            "preferred_excluded_technologies": [],
+            "employment_types": ["contract"],
+            "salary_min": None,
+        },
+    )()
+    job = NormalizedJob(
+        source="adzuna",
+        source_job_id="contractor",
+        title="Backend Engineer",
+        company_name="Acme",
+        location_display="Remote",
+        description="Python role",
+        employment_type="contractor",
+        remote_type="remote",
+        redirect_url="https://example.com/contractor",
+    )
+    decision = evaluate_hard_filters(job, preference)
+    match = score_job(job, None, preference, decision)
+    assert match.score_breakdown.employment_type_points == 10
+
+
+def test_clear_tracked_jobs_supports_recent_limit(client, auth_headers) -> None:
+    _update_profile_and_preferences(client, auth_headers)
+    jobs = [
+        NormalizedJob(
+            source="adzuna",
+            source_job_id="1",
+            title="Backend Engineer",
+            company_name="Acme",
+            location_display="Remote",
+            description="Python FastAPI SQLAlchemy role",
+            employment_type="permanent",
+            remote_type="remote",
+            salary_min=130000,
+            salary_max=150000,
+            redirect_url="https://example.com/jobs/1",
+        ),
+        NormalizedJob(
+            source="adzuna",
+            source_job_id="2",
+            title="Backend Engineer",
+            company_name="Beta",
+            location_display="Remote",
+            description="Python FastAPI SQLAlchemy role",
+            employment_type="permanent",
+            remote_type="remote",
+            salary_min=130000,
+            salary_max=150000,
+            redirect_url="https://example.com/jobs/2",
+        ),
+    ]
+    client.app.dependency_overrides[get_job_source] = lambda: FakeJobSource(jobs)
+    matches = client.get("/api/v1/jobs/matches", headers=auth_headers).json()["items"]
+    for match in matches:
+        client.post(
+            "/api/v1/jobs/actions",
+            headers=auth_headers,
+            json={
+                "status": "saved",
+                "score": match["score"],
+                "job": match["job"],
+            },
+        )
+    clear_response = client.delete("/api/v1/jobs/tracked?limit=1", headers=auth_headers)
+    assert clear_response.status_code == 200
+    assert clear_response.json()["cleared"] == 1
+    stats = client.get("/api/v1/dashboard/stats", headers=auth_headers).json()
+    assert stats["total_tracked"] == 1

@@ -44,7 +44,13 @@ class LLMClient:
             response = await client.post(url, headers=headers, json=payload)
         if response.status_code >= 400:
             raise LLMError(f"LLM request failed: {response.status_code}")
-        content = response.json()["choices"][0]["message"]["content"]
+        try:
+            body = response.json()
+            content = body["choices"][0]["message"]["content"]
+        except (KeyError, IndexError, TypeError, json.JSONDecodeError) as exc:
+            raise LLMError("LLM response had unexpected format") from exc
+        if not isinstance(content, str) or not content.strip():
+            raise LLMError("LLM response content was empty")
         return _parse_json_content(content)
 
 
@@ -58,7 +64,10 @@ def _parse_json_content(content: str) -> dict[str, Any]:
         pass
     match = JSON_BLOCK_PATTERN.search(stripped)
     if match:
-        parsed = json.loads(match.group(0))
+        try:
+            parsed = json.loads(match.group(0))
+        except json.JSONDecodeError:
+            parsed = None
         if isinstance(parsed, dict):
             return parsed
     raise LLMError("LLM response was not valid JSON")

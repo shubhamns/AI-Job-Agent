@@ -256,7 +256,7 @@ def evaluate_hard_filters(
         location_matches = any(locations_match(location, job) for location in physical_locations)
         if wants_remote and normalize_value(job.remote_type) == "remote":
             location_matches = True
-        if not location_matches and normalize_value(job.remote_type) != "remote":
+        if not location_matches:
             reasons.append("Job location does not match preferred locations.")
 
     return FilterDecision(
@@ -305,7 +305,7 @@ def score_job(
 
         if preference.employment_types:
             allowed = {normalize_value(item) for item in preference.employment_types}
-            if normalize_value(job.employment_type or "") in allowed:
+            if employment_matches(allowed, normalize_value(job.employment_type or "")):
                 breakdown.employment_type_points = 10
         else:
             breakdown.employment_type_points = 5
@@ -377,16 +377,23 @@ def detect_technologies(*, job_text: str, technologies: Iterable[str]) -> list[s
 
 
 def job_text_from_payload(job: dict) -> str:
-    return " ".join(
-        piece
-        for piece in [
-            str(job.get("title", "")),
-            str(job.get("description", "")),
-            str(job.get("company_name", "")),
-            str(job.get("category", "")),
-        ]
-        if piece
-    )
+    parts: list[str] = []
+    for key in ("title", "description", "company_name", "category"):
+        value = job.get(key)
+        if value is None:
+            continue
+        text = str(value).strip()
+        if text:
+            parts.append(text)
+    return " ".join(parts)
+
+
+def payload_text(job: dict, key: str, fallback: str = "") -> str:
+    value = job.get(key)
+    if value is None:
+        return fallback
+    text = str(value).strip()
+    return text or fallback
 
 
 def job_text(job: NormalizedJob) -> str:

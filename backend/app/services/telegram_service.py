@@ -4,6 +4,7 @@ import secrets
 from typing import Literal
 
 from sqlalchemy import select
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -126,13 +127,15 @@ async def run_job_checks(
     *,
     check_type: Literal["hourly", "daily"],
 ) -> int:
-    users = await session.scalars(
-        select(User)
-        .options(
-            selectinload(User.candidate_profile),
-            selectinload(User.job_preference),
+    users = list(
+        await session.scalars(
+            select(User)
+            .options(
+                selectinload(User.candidate_profile),
+                selectinload(User.job_preference),
+            )
+            .where(User.telegram_chat_id.is_not(None), User.notifications_enabled.is_(True))
         )
-        .where(User.telegram_chat_id.is_not(None), User.notifications_enabled.is_(True))
     )
     total = 0
     for user in users:
@@ -190,5 +193,23 @@ async def handle_job_action_callback(
         JobActionRequest(status=status, score=notification.score, job=job),
     )
     session.add(interaction)
-    await session.commit()
+    try:
+        await session.commit()
+    except IntegrityError:
+        await session.rollback()
+        interaction = await get_existing_interaction(
+            session,
+            user,
+            source=job.source,
+            source_job_id=job.source_job_id,
+        )
+        if interaction is None:
+            return "Could not update job status."
+        interaction = apply_job_action(
+            interaction,
+            user,
+            JobActionRequest(status=status, score=notification.score, job=job),
+        )
+        session.add(interaction)
+        await session.commit()
     return f"Marked as {status}."

@@ -1,6 +1,12 @@
 from collections.abc import AsyncGenerator
+from contextlib import asynccontextmanager
 
-from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import (
+    AsyncEngine,
+    AsyncSession,
+    async_sessionmaker,
+    create_async_engine,
+)
 
 from app.core.config import get_settings
 
@@ -15,11 +21,17 @@ def configure_db_engine() -> None:
     AsyncSessionLocal = async_sessionmaker(_engine, expire_on_commit=False, class_=AsyncSession)
 
 
-async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+@asynccontextmanager
+async def session_scope() -> AsyncGenerator[AsyncSession, None]:
     if AsyncSessionLocal is None:
         configure_db_engine()
     assert AsyncSessionLocal is not None
     async with AsyncSessionLocal() as session:
+        yield session
+
+
+async def get_db_session() -> AsyncGenerator[AsyncSession, None]:
+    async with session_scope() as session:
         yield session
 
 
