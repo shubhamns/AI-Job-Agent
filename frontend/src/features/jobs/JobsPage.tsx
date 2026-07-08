@@ -164,28 +164,29 @@ export function JobsPage({
                 <Skeleton key={i} className="h-20" />
               ))}
             </div>
-          ) : null}
-          <div className="space-y-2 lg:max-h-[60vh] lg:overflow-y-auto">
-            {jobs.map((match) => (
-              <JobListItem
-                key={`${match.job.source}-${match.job.source_job_id}`}
-                match={match}
-                selected={selectedJob?.job.source_job_id === match.job.source_job_id}
-                onClick={() => handleSelectJob(match.job.source_job_id)}
-              />
-            ))}
-            {!jobsLoading && !jobs.length ? (
-              <div className="space-y-3 py-6 text-center">
-                <p className="text-sm text-muted-foreground">No jobs match your current filters.</p>
-                <p className="text-xs text-muted-foreground">
-                  Try lowering min score, clearing search, or updating titles/locations in Preferences.
-                </p>
-                <Button type="button" variant="outline" size="sm" onClick={onResetFilters}>
-                  Reset filters
-                </Button>
-              </div>
-            ) : null}
-          </div>
+          ) : (
+            <div className="space-y-2 lg:max-h-[60vh] lg:overflow-y-auto">
+              {jobs.map((match) => (
+                <JobListItem
+                  key={`${match.job.source}-${match.job.source_job_id}`}
+                  match={match}
+                  selected={selectedJob?.job.source_job_id === match.job.source_job_id}
+                  onClick={() => handleSelectJob(match.job.source_job_id)}
+                />
+              ))}
+              {!jobs.length ? (
+                <div className="space-y-3 py-6 text-center">
+                  <p className="text-sm text-muted-foreground">No jobs match your current filters.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Try lowering min score, clearing search, or updating titles/locations in Preferences.
+                  </p>
+                  <Button type="button" variant="outline" size="sm" onClick={onResetFilters}>
+                    Reset filters
+                  </Button>
+                </div>
+              ) : null}
+            </div>
+          )}
         </CardContent>
       </Card>
       <div className="hidden lg:block">

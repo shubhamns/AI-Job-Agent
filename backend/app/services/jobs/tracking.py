@@ -44,11 +44,12 @@ def apply_tracked_job_update(
     interaction: JobInteraction,
     payload: TrackedJobUpdateRequest,
 ) -> JobInteraction:
-    if payload.status is not None:
+    fields_set = payload.model_fields_set
+    if "status" in fields_set and payload.status is not None:
         interaction.status = payload.status
-    if payload.notes is not None:
+    if "notes" in fields_set:
         interaction.notes = payload.notes
-    if payload.follow_up_at is not None:
+    if "follow_up_at" in fields_set:
         interaction.follow_up_at = payload.follow_up_at
     return interaction
 

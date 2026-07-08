@@ -93,6 +93,14 @@ def test_pipeline_update_and_analytics_flow(client, auth_headers) -> None:
     assert updated.status_code == 200
     assert updated.json()["status"] == "interview"
     assert updated.json()["notes"] == "Phone screen scheduled"
+    assert updated.json()["follow_up_at"] is not None
+    cleared = client.patch(
+        "/api/v1/jobs/tracked/adzuna/react-1",
+        headers=auth_headers,
+        json={"follow_up_at": None},
+    )
+    assert cleared.status_code == 200
+    assert cleared.json()["follow_up_at"] is None
     tracked = client.get("/api/v1/jobs/adzuna/react-1", headers=auth_headers)
     assert tracked.status_code == 200
     outcomes = client.get("/api/v1/analytics/outcomes", headers=auth_headers)

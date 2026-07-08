@@ -138,7 +138,7 @@ export function JobsPage() {
       jobs={jobs}
       trackedJobs={trackedJobs}
       filters={filters}
-      jobsLoading={jobsQuery.isLoading || jobsQuery.isFetching}
+      jobsLoading={jobsQuery.isLoading}
       jobsError={jobsQuery.isError ? errorMessage(jobsQuery.error, "Unable to load jobs.") : null}
       selectedJob={selectedJob}
       autoOpenJobId={autoOpenJobId}
@@ -148,7 +148,7 @@ export function JobsPage() {
       onSelectJob={setSelectedJobId}
       onTrackJob={handleTrackJob}
       pack={packQuery.data ?? generatePack.data ?? null}
-      packLoading={packQuery.isLoading || packQuery.isFetching || generatePack.isPending}
+      packLoading={packQuery.isLoading || generatePack.isPending}
       onGeneratePack={handleGeneratePack}
     />
   );

@@ -105,10 +105,24 @@ export function useTrackJob() {
       ai_score_rationale?: string | null;
       job: JobMatch["job"];
     }) => api.trackJob(payload),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
+      queryClient.setQueriesData<{ items: JobMatch[]; total: number; ai_scoring_enabled: boolean }>(
+        { queryKey: queryKeys.jobMatchesRoot },
+        (current) => {
+          if (!current) return current;
+          return {
+            ...current,
+            items: current.items.map((item) =>
+              item.job.source === variables.job.source &&
+              item.job.source_job_id === variables.job.source_job_id
+                ? { ...item, tracking_status: variables.status }
+                : item,
+            ),
+          };
+        },
+      );
       void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobsRoot });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
-      void queryClient.invalidateQueries({ queryKey: queryKeys.jobMatchesRoot });
       void queryClient.invalidateQueries({ queryKey: queryKeys.outcomes });
       void queryClient.invalidateQueries({ queryKey: queryKeys.strategy });
     },
