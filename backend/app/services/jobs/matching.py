@@ -6,6 +6,7 @@ from collections.abc import Iterable
 from app.models.candidate_profile import CandidateProfile
 from app.models.job_preference import JobPreference
 from app.schemas.job import (
+    AiFitScore,
     FilterDecision,
     JobMatch,
     JobMatchListResponse,
@@ -16,6 +17,38 @@ from app.schemas.job import (
 from app.services.jobs.sources import JobSource
 
 TOKEN_PATTERN = re.compile(r"[a-z0-9\+\#\.]+")
+COMMON_TECH_HINTS = (
+    "python",
+    "javascript",
+    "typescript",
+    "react",
+    "next",
+    "node",
+    "java",
+    "go",
+    "rust",
+    "sql",
+    "postgresql",
+    "mongodb",
+    "aws",
+    "docker",
+    "kubernetes",
+    "fastapi",
+    "django",
+    "flask",
+    "vue",
+    "angular",
+    "graphql",
+    "redis",
+    "kafka",
+    "git",
+    "agile",
+    "rest",
+    "api",
+    "microservices",
+    "ci",
+    "cd",
+)
 REMOTE_LOCATION_HINTS = ("remote", "wfh", "work from home", "anywhere")
 CITY_ALIASES: dict[str, set[str]] = {
     "bangalore": {"bangalore", "bengaluru", "bangaluru", "bengaluru urban"},
@@ -122,6 +155,8 @@ async def fetch_and_rank_job_matches(
     include_skipped: bool = False,
     search: str | None = None,
     remote_types: str | None = None,
+    ai_scores_by_dedupe_key: dict[str, AiFitScore] | None = None,
+    ai_scoring_enabled: bool = False,
 ) -> JobMatchListResponse:
     query = build_job_search_query(
         profile,
@@ -144,6 +179,8 @@ async def fetch_and_rank_job_matches(
             continue
         match = score_job(job, profile, preference, filter_decision)
         match.tracking_status = tracking_status
+        if ai_scores_by_dedupe_key:
+            match.ai_fit = ai_scores_by_dedupe_key.get(match.dedupe_key)
         matches.append(match)
 
     deduped = deduplicate_matches(matches)
@@ -161,7 +198,11 @@ async def fetch_and_rank_job_matches(
         ]
     deduped = [match for match in deduped if match.score >= min_score]
     deduped.sort(key=lambda match: sort_key(match, sort_by))
-    return JobMatchListResponse(items=deduped, total=len(deduped))
+    return JobMatchListResponse(
+        items=deduped,
+        total=len(deduped),
+        ai_scoring_enabled=ai_scoring_enabled,
+    )
 
 
 def evaluate_hard_filters(
@@ -335,11 +376,27 @@ def detect_technologies(*, job_text: str, technologies: Iterable[str]) -> list[s
     return sorted(set(matches), key=lambda value: normalize_value(value))
 
 
-def job_text(job: NormalizedJob) -> str:
+def job_text_from_payload(job: dict) -> str:
     return " ".join(
         piece
-        for piece in [job.title, job.description, job.company_name or "", job.category or ""]
+        for piece in [
+            str(job.get("title", "")),
+            str(job.get("description", "")),
+            str(job.get("company_name", "")),
+            str(job.get("category", "")),
+        ]
         if piece
+    )
+
+
+def job_text(job: NormalizedJob) -> str:
+    return job_text_from_payload(
+        {
+            "title": job.title,
+            "description": job.description,
+            "company_name": job.company_name,
+            "category": job.category,
+        }
     )
 
 

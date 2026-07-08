@@ -7,6 +7,9 @@ from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 from pydantic import BeforeValidator, Field, field_validator
 from pydantic_settings import BaseSettings, NoDecode, SettingsConfigDict
 
+BACKEND_DIR = Path(__file__).resolve().parents[2]
+ENV_FILE = BACKEND_DIR / ".env"
+
 
 def parse_cors_origins(value: Any) -> list[str]:
     if isinstance(value, list):
@@ -22,7 +25,7 @@ def parse_cors_origins(value: Any) -> list[str]:
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=str(ENV_FILE),
         env_file_encoding="utf-8",
         case_sensitive=False,
         populate_by_name=True,
@@ -63,6 +66,15 @@ class Settings(BaseSettings):
     cron_enabled: bool = Field(default=False, alias="CRON_ENABLED")
     job_check_daily_hour: int = Field(default=9, alias="JOB_CHECK_DAILY_HOUR")
     job_check_timezone: str = Field(default="Asia/Kolkata", alias="JOB_CHECK_TIMEZONE")
+    openai_api_key: str | None = Field(default=None, alias="OPENAI_API_KEY")
+    openai_model: str = Field(default="gpt-4o-mini", alias="OPENAI_MODEL")
+    openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
+    ai_scoring_enabled: bool = Field(default=True, alias="AI_SCORING_ENABLED")
+    min_evidence_sample_size: int = Field(default=3, alias="MIN_EVIDENCE_SAMPLE_SIZE")
+
+    @property
+    def resolved_database_url(self) -> str:
+        return self.database_url or "sqlite+aiosqlite:///./ai_job_agent.db"
 
     @field_validator("database_url")
     @classmethod

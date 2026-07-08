@@ -3,7 +3,7 @@ import { defaultJobFilters, type JobFilters } from "@/lib/constants";
 import { queryKeys } from "@/lib/queryKeys";
 import { api } from "@/lib/api";
 import { hasSession } from "@/lib/cookies";
-import type { CandidateProfile, JobMatch, JobPreference, TelegramStatus } from "@/types";
+import type { CandidateProfile, JobMatch, JobPreference, TelegramStatus, TrackingStatus } from "@/types";
 
 export function useMe() {
   return useQuery({
@@ -35,10 +35,10 @@ export function useDashboardStats() {
   });
 }
 
-export function useTrackedJobs() {
+export function useTrackedJobs(params?: { status?: TrackingStatus; pipelineOnly?: boolean }) {
   return useQuery({
-    queryKey: queryKeys.trackedJobs,
-    queryFn: () => api.getTrackedJobs(),
+    queryKey: queryKeys.trackedJobs(params),
+    queryFn: () => api.getTrackedJobs(params),
   });
 }
 
@@ -90,7 +90,7 @@ export function useUpdatePreferences() {
     mutationFn: (payload: Omit<JobPreference, "id" | "user_id">) => api.updatePreferences(payload),
     onSuccess: (preferences) => {
       queryClient.setQueryData(queryKeys.preferences, preferences);
-      void queryClient.invalidateQueries({ queryKey: ["jobs", "matches"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobMatchesRoot });
     },
   });
 }
@@ -98,12 +98,77 @@ export function useUpdatePreferences() {
 export function useTrackJob() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { status: "saved" | "applied" | "skipped"; score: number; job: JobMatch["job"] }) =>
-      api.trackJob(payload),
+    mutationFn: (payload: {
+      status: TrackingStatus;
+      score: number;
+      ai_score?: number | null;
+      ai_score_rationale?: string | null;
+      job: JobMatch["job"];
+    }) => api.trackJob(payload),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobs });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobsRoot });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
-      void queryClient.invalidateQueries({ queryKey: ["jobs", "matches"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobMatchesRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.outcomes });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.strategy });
+    },
+  });
+}
+
+export function useUpdateTrackedJob() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: {
+      source: string;
+      sourceJobId: string;
+      status?: TrackingStatus;
+      notes?: string | null;
+      follow_up_at?: string | null;
+    }) =>
+      api.updateTrackedJob(payload.source, payload.sourceJobId, {
+        status: payload.status,
+        notes: payload.notes,
+        follow_up_at: payload.follow_up_at,
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobsRoot });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.outcomes });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.strategy });
+    },
+  });
+}
+
+export function useOutcomeIntelligence() {
+  return useQuery({
+    queryKey: queryKeys.outcomes,
+    queryFn: () => api.getOutcomeIntelligence(),
+  });
+}
+
+export function useStrategy() {
+  return useQuery({
+    queryKey: queryKeys.strategy,
+    queryFn: () => api.getStrategy(),
+  });
+}
+
+export function useApplicationPack(source: string, sourceJobId: string, enabled: boolean) {
+  return useQuery({
+    queryKey: queryKeys.applicationPack(source, sourceJobId),
+    queryFn: () => api.generateApplicationPack(source, sourceJobId),
+    enabled,
+    staleTime: 1000 * 60 * 30,
+  });
+}
+
+export function useGenerateApplicationPack() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: { source: string; sourceJobId: string; refresh?: boolean }) =>
+      api.generateApplicationPack(payload.source, payload.sourceJobId, payload.refresh ?? false),
+    onSuccess: (pack) => {
+      queryClient.setQueryData(queryKeys.applicationPack(pack.source, pack.source_job_id), pack);
     },
   });
 }
@@ -122,11 +187,11 @@ export function useUpdateTelegramSettings() {
 export function useClearTrackedJobs() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (status?: "saved" | "applied" | "skipped") => api.clearTrackedJobs(status),
+    mutationFn: (status?: TrackingStatus) => api.clearTrackedJobs(status),
     onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobs });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.trackedJobsRoot });
       void queryClient.invalidateQueries({ queryKey: queryKeys.dashboardStats });
-      void queryClient.invalidateQueries({ queryKey: ["jobs", "matches"] });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.jobMatchesRoot });
     },
   });
 }

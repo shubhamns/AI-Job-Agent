@@ -30,6 +30,7 @@ export function JobListItem({
       </div>
       <div className="flex shrink-0 flex-col items-end gap-1">
         <Badge>{match.score}</Badge>
+        {match.ai_fit ? <Badge variant="secondary">AI {match.ai_fit.score}</Badge> : null}
         <Badge variant="outline">{match.tracking_status}</Badge>
       </div>
     </button>

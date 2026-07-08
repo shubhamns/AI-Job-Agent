@@ -3,6 +3,8 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.analytics import router as analytics_router
+from app.api.routes.applications import router as applications_router
 from app.api.routes.auth import router as auth_router
 from app.api.routes.dashboard import router as dashboard_router
 from app.api.routes.health import router as health_router
@@ -16,22 +18,16 @@ from app.services.scheduler import start_background_workers, stop_background_wor
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
-    settings = get_settings()
-    if settings.database_url:
-        from app.db.session import dispose_engine
+    from app.db.session import configure_db_engine, dispose_engine
 
-        start_background_workers()
-        try:
-            yield
-        finally:
-            await stop_background_workers()
-            await dispose_engine()
-        return
+    get_settings.cache_clear()
+    configure_db_engine()
     start_background_workers()
     try:
         yield
     finally:
         await stop_background_workers()
+        await dispose_engine()
 
 
 def create_app() -> FastAPI:
@@ -46,6 +42,8 @@ def create_app() -> FastAPI:
     )
     app.include_router(health_router)
     app.include_router(auth_router, prefix=settings.api_v1_prefix)
+    app.include_router(analytics_router, prefix=settings.api_v1_prefix)
+    app.include_router(applications_router, prefix=settings.api_v1_prefix)
     app.include_router(dashboard_router, prefix=settings.api_v1_prefix)
     app.include_router(jobs_router, prefix=settings.api_v1_prefix)
     app.include_router(profile_router, prefix=settings.api_v1_prefix)

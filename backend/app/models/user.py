@@ -9,6 +9,8 @@ from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 if TYPE_CHECKING:
+    from app.models.ai_score_cache import AiScoreCache
+    from app.models.application_pack import ApplicationPackRecord
     from app.models.candidate_profile import CandidateProfile
     from app.models.job_interaction import JobInteraction
     from app.models.job_notification import JobNotification
@@ -76,6 +78,14 @@ class User(Base):
         cascade="all, delete-orphan",
     )
     job_notifications: Mapped[list[JobNotification]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    ai_score_cache: Mapped[list[AiScoreCache]] = relationship(
+        back_populates="user",
+        cascade="all, delete-orphan",
+    )
+    application_packs: Mapped[list[ApplicationPackRecord]] = relationship(
         back_populates="user",
         cascade="all, delete-orphan",
     )

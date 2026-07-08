@@ -1,6 +1,6 @@
 import type { JobMatch, TrackedJob } from "@/types";
 
-export function trackedJobToMatch(tracked: TrackedJob): JobMatch {
+function trackedJobToMatch(tracked: TrackedJob): JobMatch {
   return {
     dedupe_key: tracked.dedupe_key,
     score: tracked.score ?? 0,

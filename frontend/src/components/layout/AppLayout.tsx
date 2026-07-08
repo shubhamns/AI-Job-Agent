@@ -1,4 +1,4 @@
-import { Briefcase, Home, LogOut, Settings2, UserRound } from "lucide-react";
+import { Briefcase, ClipboardList, Home, Lightbulb, LogOut, Settings2, TrendingUp, UserRound } from "lucide-react";
 import { NavLink, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -6,6 +6,9 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { to: "/", label: "Home", icon: Home },
   { to: "/jobs", label: "Jobs", icon: Briefcase },
+  { to: "/tracker", label: "Tracker", icon: ClipboardList },
+  { to: "/insights", label: "Insights", icon: TrendingUp },
+  { to: "/strategy", label: "Strategy", icon: Lightbulb },
   { to: "/profile", label: "Profile", icon: UserRound },
   { to: "/preferences", label: "Preferences", icon: Settings2 },
 ];
@@ -66,7 +69,7 @@ export function AppLayout({
         <main className="mx-auto w-full max-w-5xl flex-1 px-4 py-4 pb-24 md:pb-6">{children}</main>
         <nav className="safe-bottom fixed inset-x-0 bottom-0 z-30 border-t border-border bg-card/95 backdrop-blur md:hidden">
           <div className="mx-auto grid max-w-lg grid-cols-4 gap-1 px-2 py-2">
-            {navItems.map(({ to, label, icon: Icon }) => {
+            {navItems.slice(0, 4).map(({ to, label, icon: Icon }) => {
               const active = location.pathname === to;
               return (
                 <NavLink

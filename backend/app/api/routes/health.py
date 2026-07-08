@@ -18,7 +18,7 @@ async def readiness(
     session: DbSession,
 ) -> ReadinessResponse:
     database = "skipped"
-    if settings.database_url:
+    if settings.resolved_database_url:
         await session.execute(text("SELECT 1"))
         database = "ok"
     return ReadinessResponse(status="ok", database=database)

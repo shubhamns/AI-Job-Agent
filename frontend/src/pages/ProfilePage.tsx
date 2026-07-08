@@ -10,6 +10,7 @@ import {
   useUploadResume,
 } from "@/hooks/queries";
 import { csvToList } from "@/lib/format";
+import { errorMessage } from "@/lib/errors";
 
 export function ProfilePage() {
   const profileQuery = useProfile();
@@ -35,7 +36,7 @@ export function ProfilePage() {
       {
         loading: "Saving profile...",
         success: "Profile saved",
-        error: (error) => (error instanceof Error ? error.message : "Save failed"),
+        error: (error) => errorMessage(error, "Save failed"),
       },
     );
   }
@@ -48,7 +49,7 @@ export function ProfilePage() {
     await toast.promise(uploadResume.mutateAsync(file), {
       loading: "Uploading resume...",
       success: "Resume uploaded",
-      error: (error) => (error instanceof Error ? error.message : "Upload failed"),
+      error: (error) => errorMessage(error, "Upload failed"),
     });
   }
 
@@ -58,7 +59,7 @@ export function ProfilePage() {
       window.open(link.link_url, "_blank", "noopener,noreferrer");
       toast.success("Open Telegram and press Start to link your account.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Unable to create Telegram link.");
+      toast.error(errorMessage(error, "Unable to create Telegram link."));
     }
   }
 
@@ -73,7 +74,7 @@ export function ProfilePage() {
       {
         loading: "Saving Telegram settings...",
         success: "Telegram settings saved",
-        error: (error) => (error instanceof Error ? error.message : "Unable to save Telegram settings."),
+        error: (error) => errorMessage(error, "Unable to save Telegram settings."),
       },
     );
   }

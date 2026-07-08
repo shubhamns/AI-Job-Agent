@@ -7,7 +7,8 @@ import { Label } from "@/components/ui/label";
 import { Skeleton } from "@/components/ui/skeleton";
 import { JobDetailPanel } from "@/features/jobs/JobDetailPanel";
 import { JobListItem } from "@/features/jobs/JobListItem";
-import type { JobMatch, TrackedJob } from "@/types";
+import type { JobFilters } from "@/lib/constants";
+import type { ApplicationPack, JobMatch, TrackedJob } from "@/types";
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(() => window.matchMedia("(max-width: 1023px)").matches);
@@ -33,31 +34,25 @@ export function JobsPage({
   onResetFilters,
   onSelectJob,
   onTrackJob,
+  pack,
+  packLoading,
+  onGeneratePack,
 }: {
   jobs: JobMatch[];
   trackedJobs: TrackedJob[];
-  filters: {
-    search: string;
-    sortBy: "score" | "recent" | "salary";
-    minScore: number;
-    includeSkipped: boolean;
-    remoteTypes: string;
-  };
+  filters: JobFilters;
   jobsLoading: boolean;
   jobsError: string | null;
   selectedJob: JobMatch | null;
   autoOpenJobId: string | null;
   onAutoOpenHandled: () => void;
-  onFiltersChange: (filters: {
-    search: string;
-    sortBy: "score" | "recent" | "salary";
-    minScore: number;
-    includeSkipped: boolean;
-    remoteTypes: string;
-  }) => void;
+  onFiltersChange: (filters: JobFilters) => void;
   onResetFilters: () => void;
   onSelectJob: (jobId: string) => void;
   onTrackJob: (status: "saved" | "applied" | "skipped", match: JobMatch) => Promise<void>;
+  pack: ApplicationPack | null;
+  packLoading: boolean;
+  onGeneratePack: (refresh: boolean) => void;
 }) {
   const isMobile = useIsMobile();
   const [mobileDetailOpen, setMobileDetailOpen] = useState(false);
@@ -91,6 +86,9 @@ export function JobsPage({
           onTrackJob={onTrackJob}
           onBack={() => setMobileDetailOpen(false)}
           showBack
+          pack={pack}
+          packLoading={packLoading}
+          onGeneratePack={onGeneratePack}
         />
       </div>
     );
@@ -134,6 +132,7 @@ export function JobsPage({
                 }
               >
                 <option value="score">Best score</option>
+                <option value="ai_score">Best AI fit</option>
                 <option value="recent">Most recent</option>
                 <option value="salary">Highest salary</option>
               </select>
@@ -191,7 +190,14 @@ export function JobsPage({
       </Card>
       <div className="hidden lg:block">
         {selectedJob ? (
-          <JobDetailPanel job={selectedJob} trackedJobs={trackedJobs} onTrackJob={onTrackJob} />
+          <JobDetailPanel
+            job={selectedJob}
+            trackedJobs={trackedJobs}
+            onTrackJob={onTrackJob}
+            pack={pack}
+            packLoading={packLoading}
+            onGeneratePack={onGeneratePack}
+          />
         ) : (
           <Card className="flex min-h-[50vh] items-center justify-center border-dashed">
             <CardContent className="text-center">

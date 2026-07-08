@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
+import { trackingStatusLabel, trackingStatusVariant } from "@/lib/tracking";
 import type { DashboardStats, JobMatch, TrackedJob } from "@/types";
 
 function StatCard({ label, value }: { label: string; value: string | number }) {
@@ -76,15 +77,39 @@ export function DashboardPage({
       <Card className="border-primary/15 bg-gradient-to-br from-primary/5 to-transparent">
         <CardHeader>
           <CardTitle>Your job search dashboard</CardTitle>
-          <CardDescription>Track saved, applied, and skipped roles. Telegram sends new matches hourly.</CardDescription>
+          <CardDescription>Track pipeline outcomes, follow-ups, and top matches in one place.</CardDescription>
         </CardHeader>
       </Card>
       <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
         <StatCard label="Saved" value={stats?.total_saved ?? 0} />
         <StatCard label="Applied" value={stats?.total_applied ?? 0} />
-        <StatCard label="Skipped" value={stats?.total_skipped ?? 0} />
-        <StatCard label="Avg Score" value={(stats?.average_saved_score ?? 0).toFixed(1)} />
+        <StatCard label="Interviews" value={stats?.total_interview ?? 0} />
+        <StatCard label="Offers" value={stats?.total_offer ?? 0} />
       </div>
+      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+        <StatCard label="Rejected" value={stats?.total_rejected ?? 0} />
+        <StatCard label="No response" value={stats?.total_no_response ?? 0} />
+        <StatCard label="Interview rate" value={`${(stats?.interview_rate ?? 0).toFixed(1)}%`} />
+        <StatCard label="Avg score" value={(stats?.average_saved_score ?? 0).toFixed(1)} />
+      </div>
+      {(stats?.upcoming_follow_ups.length ?? 0) > 0 ? (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Upcoming follow-ups</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {stats?.upcoming_follow_ups.map((item) => (
+              <JobRow
+                key={`${item.source}-${item.source_job_id}`}
+                title={item.job.title}
+                subtitle={item.follow_up_at ? new Date(item.follow_up_at).toLocaleDateString() : "No date"}
+                badge={<Badge variant="outline">{trackingStatusLabel(item.status)}</Badge>}
+                onClick={() => onSelectJob(item.source_job_id, item.source)}
+              />
+            ))}
+          </CardContent>
+        </Card>
+      ) : null}
       <Card>
         <CardHeader className="flex-row items-center justify-between space-y-0">
           <CardTitle className="text-base">Recent Activity</CardTitle>
@@ -104,8 +129,8 @@ export function DashboardPage({
               title={item.job.title}
               subtitle={item.job.company_name ?? "Unknown company"}
               badge={
-                <Badge variant={item.status === "applied" ? "success" : item.status === "skipped" ? "warning" : "default"}>
-                  {item.status}
+                <Badge variant={trackingStatusVariant(item.status)}>
+                  {trackingStatusLabel(item.status)}
                 </Badge>
               }
               onClick={() => onSelectJob(item.source_job_id, item.source)}
@@ -127,7 +152,12 @@ export function DashboardPage({
               key={match.job.source_job_id}
               title={match.job.title}
               subtitle={match.job.company_name ?? "Unknown company"}
-              badge={<Badge>{match.score}</Badge>}
+              badge={
+                <div className="flex gap-1">
+                  <Badge>{match.score}</Badge>
+                  {match.ai_fit ? <Badge variant="secondary">AI {match.ai_fit.score}</Badge> : null}
+                </div>
+              }
               onClick={() => onSelectJob(match.job.source_job_id, match.job.source)}
             />
           ))}

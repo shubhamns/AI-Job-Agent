@@ -13,48 +13,77 @@ The app lets a candidate:
 - review and edit a structured profile
 - define job preferences, including required and preferred excluded technologies
 - fetch normalized job matches from Adzuna
-- sort and filter jobs deterministically
-- track each job as `saved`, `applied`, or `skipped`
-- monitor dashboard stats across the pipeline
+- sort and filter jobs deterministically and by AI fit score
+- track each job as `saved`, `applied`, `skipped`, or through the full pipeline (`interview`, `rejected`, `offer`, `no_response`)
+- monitor dashboard stats, follow-ups, and pipeline conversion
+- analyze which role types, skills, locations, salary bands, and sources produce interviews
+- get strategy recommendations with evidence clearly separated from AI suggestions
+- generate tailored application packs with ATS checks and verified claims
+- optionally receive Telegram job alerts
 
-This repository intentionally stops at the Phase 1 scope above. It does not add Phase 2 product features.
+## Product phases
+
+All five phases are implemented.
+
+| Phase | Feature |
+| --- | --- |
+| 1 | Resume upload → structured profile → Adzuna jobs → deterministic + AI fit scoring → dashboard → save/ignore |
+| 2 | Application tracker with notes and follow-up dates |
+| 3 | Outcome intelligence from observed application results |
+| 4 | Strategy agent distinguishing evidence from AI suggestions |
+| 5 | Tailored application pack (CV suggestions, cover letter, interview questions, ATS checks) |
+
+## Frontend routes
+
+| Route | Purpose |
+| --- | --- |
+| `/login` | Sign in or register |
+| `/` | Dashboard with stats, follow-ups, and top matches |
+| `/jobs` | Browse, filter, score, and track job matches |
+| `/tracker` | Manage application pipeline, notes, and follow-ups |
+| `/insights` | Outcome intelligence from tracked applications |
+| `/strategy` | Evidence-backed recommendations vs AI suggestions |
+| `/profile` | Profile editing, resume upload, Telegram linking |
+| `/preferences` | Job search preferences and exclusion rules |
 
 ## Architecture
 
 ### Frontend
 
 - React + TypeScript + Vite
-- responsive dashboard-oriented UI
-- token-based auth flow against the FastAPI backend
-- views for dashboard, profile, preferences, jobs, and job detail
+- TanStack Query for server state
+- Token-based auth with refresh flow
+- Pages handle data fetching; feature components handle presentation
 
 ### Backend
 
-- FastAPI
-- async SQLAlchemy
+- FastAPI with async SQLAlchemy
 - Alembic migrations
-- Neon/Postgres-compatible configuration
+- SQLite for local dev; Postgres for Docker/production
 - Adzuna async adapter behind a `JobSource` abstraction
-- deterministic deduplication, filters, and scoring
-- persistent job tracking and dashboard stats APIs
+- Deterministic deduplication, filters, and scoring
+- Optional OpenAI-compatible AI scoring, strategy suggestions, and application packs
+- Persistent job tracking, pipeline analytics, and dashboard stats APIs
+- Background scheduler for Telegram polling and daily job checks
 
-## Repository Layout
+## Repository layout
 
 ```text
 ai-job-agent/
-├── frontend/
-├── backend/
-├── .github/workflows/
-├── docker-compose.yml
+├── frontend/          React app
+├── backend/           FastAPI app + Alembic migrations
+├── .github/workflows/ CI and deploy
+├── docker-compose.yml Postgres + backend + frontend
 └── README.md
 ```
 
-## API Summary
+## API summary
 
 Auth:
 
 - `POST /api/v1/auth/register`
 - `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
 - `GET /api/v1/auth/me`
 
 Profile:
@@ -69,11 +98,35 @@ Jobs:
 
 - `GET /api/v1/jobs/matches`
 - `GET /api/v1/jobs/tracked`
-- `POST /api/v1/jobs/actions`
 - `GET /api/v1/jobs/{source}/{source_job_id}`
+- `PATCH /api/v1/jobs/tracked/{source}/{source_job_id}`
+- `POST /api/v1/jobs/actions`
+- `DELETE /api/v1/jobs/tracked`
+
+Analytics:
+
+- `GET /api/v1/analytics/outcomes`
+- `GET /api/v1/analytics/strategy`
+
+Applications:
+
+- `POST /api/v1/applications/{source}/{source_job_id}/pack`
+
+Dashboard:
+
 - `GET /api/v1/dashboard/stats`
 
-## Local Development
+Telegram:
+
+- `GET /api/v1/telegram/link`
+- `GET /api/v1/telegram/status`
+- `PATCH /api/v1/telegram/settings`
+
+Health:
+
+- `GET /health`
+
+## Local development
 
 ### 1. Backend
 
@@ -87,7 +140,21 @@ alembic upgrade head
 uvicorn app.main:app --reload
 ```
 
-If `pip install` seems stuck, wait 1–2 minutes on first run (many packages download). Use `python3` on macOS — `python` may not exist.
+Backend runs at `http://localhost:8000`. API docs at `http://localhost:8000/docs`.
+
+**Database:** `.env.example` defaults to SQLite (`sqlite+aiosqlite:///./ai_job_agent.db`), which works without installing Postgres. For Postgres locally, start Postgres and set:
+
+```env
+DATABASE_URL=postgresql://postgres:postgres@localhost:5432/ai_job_agent
+```
+
+Then run `alembic upgrade head` again.
+
+**Required for job search:** set `ADZUNA_APP_ID` and `ADZUNA_APP_KEY` in `backend/.env`. Get keys at [developer.adzuna.com](https://developer.adzuna.com/).
+
+**Recommended:** set a real `JWT_SECRET_KEY` before using auth in anything other than local dev.
+
+If `pip install` seems stuck, wait 1–2 minutes on first run. Use `python3` on macOS — `python` may not exist.
 
 If the venv looks wrong, reset it:
 
@@ -101,6 +168,8 @@ which python   # should show .../backend/.venv/bin/python
 pip install -r requirements.txt
 ```
 
+Restart uvicorn after changing `.env` so settings and the database connection reload cleanly.
+
 ### 2. Frontend
 
 ```bash
@@ -109,7 +178,13 @@ npm install
 npm run dev
 ```
 
-The frontend reads `API_BASE_URL` from [`frontend/.env.example`](/Users/heyshubham/shubham/mee/mee/projects/ai-job-agent/frontend/.env.example). By default it should point at `http://localhost:8000/api/v1`.
+Frontend runs at `http://localhost:5173`.
+
+Copy [`frontend/.env.example`](frontend/.env.example) to `frontend/.env` if needed. Default API target:
+
+```env
+API_BASE_URL=http://localhost:8000/api/v1
+```
 
 ## Docker
 
@@ -125,29 +200,56 @@ Services:
 - backend: `http://localhost:8000`
 - postgres: `localhost:5432`
 
+Docker uses Postgres. Copy `backend/.env.example` to `backend/.env` and add your Adzuna keys before starting.
+
 ## Deployment
 
 ### Vercel
 
-The frontend includes [`frontend/vercel.json`](/Users/heyshubham/shubham/mee/mee/projects/ai-job-agent/frontend/vercel.json).
+The frontend includes [`frontend/vercel.json`](frontend/vercel.json).
 
 Suggested environment variable:
 
 - `API_BASE_URL=https://your-backend-domain/api/v1`
 
-## Environment Files
+## Environment variables
 
-Backend example:
+Backend — see [`backend/.env.example`](backend/.env.example):
 
-- [`backend/.env.example`](/Users/heyshubham/shubham/mee/mee/projects/ai-job-agent/backend/.env.example)
+| Variable | Purpose |
+| --- | --- |
+| `DATABASE_URL` | SQLite locally; Postgres in Docker/production |
+| `JWT_SECRET_KEY` | Auth token signing |
+| `ADZUNA_APP_ID` / `ADZUNA_APP_KEY` | Job search provider |
+| `ADZUNA_COUNTRY` | Adzuna market (default `in`) |
+| `OPENAI_API_KEY` | Optional LLM for AI scoring, strategy, and packs |
+| `AI_SCORING_ENABLED` | Toggle AI fit scoring |
+| `TELEGRAM_BOT_TOKEN` | Optional Telegram bot |
+| `TELEGRAM_MODE` | `polling`, `webhook`, or `disabled` |
+| `CRON_ENABLED` | Background job checks and Telegram polling |
 
-Frontend example:
+Frontend — see [`frontend/.env.example`](frontend/.env.example):
 
-- [`frontend/.env.example`](/Users/heyshubham/shubham/mee/mee/projects/ai-job-agent/frontend/.env.example)
+| Variable | Purpose |
+| --- | --- |
+| `API_BASE_URL` | Backend API base URL |
 
-No real secrets should be committed in this repository. Only placeholder/example values belong in example env files.
+No real secrets should be committed. Only placeholder values belong in example env files.
 
-## Quality Gates
+## Optional features
+
+**OpenAI / LLM**
+
+Set `OPENAI_API_KEY` to enable LLM-backed AI fit scoring, strategy suggestions, and application packs. Without it, the app uses deterministic and heuristic fallbacks.
+
+**Telegram alerts**
+
+1. Create a bot via [@BotFather](https://t.me/BotFather)
+2. Set `TELEGRAM_BOT_TOKEN` in `backend/.env`
+3. For local dev, use `TELEGRAM_MODE=polling` or `TELEGRAM_MODE=disabled` to avoid webhook conflicts
+4. Link your account from the Profile page
+
+## Quality gates
 
 Backend:
 
@@ -156,29 +258,41 @@ cd backend
 source .venv/bin/activate
 ruff check .
 pytest
-alembic upgrade head --sql
 ```
 
 Frontend:
 
-- `cd frontend && npm run type-check`
-- `cd frontend && npm run build`
+```bash
+cd frontend
+npm run type-check
+npm run build
+```
 
-## Current Scope Boundaries
+## Troubleshooting
+
+| Symptom | Likely cause | Fix |
+| --- | --- | --- |
+| Login returns 500 | Postgres URL set but Postgres not running | Use SQLite default or start Postgres |
+| Jobs return 503 | Missing Adzuna keys | Add `ADZUNA_APP_ID` and `ADZUNA_APP_KEY`, restart backend |
+| Telegram 409 errors | Multiple pollers on same bot | Set `TELEGRAM_MODE=disabled` locally |
+| Stale config after `.env` edit | Settings cached at startup | Restart uvicorn |
+
+## Scope boundaries
 
 Implemented:
 
-- auth
-- profile/preferences editing
-- secure resume upload + extraction
-- deterministic job matching
-- job tracking
-- dashboard stats
-- responsive Phase 1 frontend
+- auth with refresh tokens
+- profile and preferences editing
+- secure resume upload and extraction
+- deterministic job matching plus heuristic/LLM AI fit scoring
+- full application pipeline tracking
+- outcome intelligence and strategy recommendations
+- tailored application packs with claim verification
+- dashboard stats and follow-up reminders
+- optional Telegram notifications
+- responsive frontend across all phases
 
 Not included:
 
-- AI-generated job scoring
 - Adzuna alternatives or multi-source federation
-- interview prep, outreach automation, analytics expansions
-- any additional Phase 2 product features
+- outreach automation or email sending

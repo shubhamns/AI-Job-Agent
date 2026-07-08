@@ -3,8 +3,15 @@ import { useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
 import { JobsPage as JobsView } from "@/features/jobs/JobsPage";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
-import { useJobMatches, useTrackJob, useTrackedJobs } from "@/hooks/queries";
+import {
+  useApplicationPack,
+  useGenerateApplicationPack,
+  useJobMatches,
+  useTrackJob,
+  useTrackedJobs,
+} from "@/hooks/queries";
 import { defaultJobFilters } from "@/lib/constants";
+import { errorMessage } from "@/lib/errors";
 import { resolveJobMatch } from "@/lib/jobs";
 import type { JobMatch } from "@/types";
 
@@ -22,6 +29,26 @@ export function JobsPage() {
   const jobsQuery = useJobMatches(jobFilters);
   const trackedQuery = useTrackedJobs();
   const trackJob = useTrackJob();
+  const generatePack = useGenerateApplicationPack();
+  const jobs = jobsQuery.data?.items ?? [];
+  const trackedJobs = trackedQuery.data ?? [];
+  const selectedJob = useMemo(
+    () => resolveJobMatch(jobs, trackedJobs, selectedJobId, openSource),
+    [jobs, trackedJobs, selectedJobId, openSource],
+  );
+  const isTracked = Boolean(
+    selectedJob &&
+      trackedJobs.some(
+        (item) =>
+          item.source === selectedJob.job.source &&
+          item.source_job_id === selectedJob.job.source_job_id,
+      ),
+  );
+  const packQuery = useApplicationPack(
+    selectedJob?.job.source ?? "",
+    selectedJob?.job.source_job_id ?? "",
+    isTracked,
+  );
 
   const handleAutoOpenHandled = useCallback(() => {
     const next = new URLSearchParams(searchParams);
@@ -40,9 +67,7 @@ export function JobsPage() {
     if (!autoOpenJobId || jobsQuery.isLoading || trackedQuery.isLoading) {
       return;
     }
-    const jobs = jobsQuery.data?.items ?? [];
-    const tracked = trackedQuery.data ?? [];
-    const match = resolveJobMatch(jobs, tracked, autoOpenJobId, openSource);
+    const match = resolveJobMatch(jobs, trackedJobs, autoOpenJobId, openSource);
     if (!match) {
       toast.error("This job is no longer available. Clear recent activity to remove old entries.");
       handleAutoOpenHandled();
@@ -50,9 +75,9 @@ export function JobsPage() {
   }, [
     autoOpenJobId,
     openSource,
-    jobsQuery.data,
+    jobs,
+    trackedJobs,
     jobsQuery.isLoading,
-    trackedQuery.data,
     trackedQuery.isLoading,
     handleAutoOpenHandled,
   ]);
@@ -61,31 +86,45 @@ export function JobsPage() {
     if (autoOpenJobId) {
       return;
     }
-    const items = jobsQuery.data?.items ?? [];
-    setSelectedJobId((current) => current ?? items[0]?.job.source_job_id ?? null);
-  }, [jobsQuery.data, autoOpenJobId]);
+    setSelectedJobId((current) => current ?? jobs[0]?.job.source_job_id ?? null);
+  }, [jobs, autoOpenJobId]);
 
   useEffect(() => {
     if (jobsQuery.isError) {
-      const message = jobsQuery.error instanceof Error ? jobsQuery.error.message : "Unable to load jobs.";
+      const message = errorMessage(jobsQuery.error, "Unable to load jobs.");
       toast.error(message);
     }
   }, [jobsQuery.isError, jobsQuery.error]);
 
-  const jobs = jobsQuery.data?.items ?? [];
-  const trackedJobs = trackedQuery.data ?? [];
-  const selectedJob = useMemo(
-    () => resolveJobMatch(jobs, trackedJobs, selectedJobId, openSource),
-    [jobs, trackedJobs, selectedJobId, openSource],
-  );
-
   async function handleTrackJob(status: "saved" | "applied" | "skipped", match: JobMatch) {
     await toast.promise(
-      trackJob.mutateAsync({ status, score: match.score, job: match.job }),
+      trackJob.mutateAsync({
+        status,
+        score: match.score,
+        ai_score: match.ai_fit?.score ?? null,
+        ai_score_rationale: match.ai_fit?.rationale ?? null,
+        job: match.job,
+      }),
       {
         loading: "Updating job status...",
         success: `Marked as ${status}`,
-        error: (error) => (error instanceof Error ? error.message : "Update failed"),
+        error: (error) => errorMessage(error, "Update failed"),
+      },
+    );
+  }
+
+  function handleGeneratePack(refresh: boolean) {
+    if (!selectedJob) return;
+    void toast.promise(
+      generatePack.mutateAsync({
+        source: selectedJob.job.source,
+        sourceJobId: selectedJob.job.source_job_id,
+        refresh,
+      }),
+      {
+        loading: refresh ? "Refreshing application pack..." : "Generating application pack...",
+        success: "Application pack ready",
+        error: (error) => errorMessage(error, "Generation failed"),
       },
     );
   }
@@ -100,7 +139,7 @@ export function JobsPage() {
       trackedJobs={trackedJobs}
       filters={filters}
       jobsLoading={jobsQuery.isLoading || jobsQuery.isFetching}
-      jobsError={jobsQuery.isError ? (jobsQuery.error instanceof Error ? jobsQuery.error.message : "Unable to load jobs.") : null}
+      jobsError={jobsQuery.isError ? errorMessage(jobsQuery.error, "Unable to load jobs.") : null}
       selectedJob={selectedJob}
       autoOpenJobId={autoOpenJobId}
       onAutoOpenHandled={handleAutoOpenHandled}
@@ -108,6 +147,9 @@ export function JobsPage() {
       onResetFilters={handleResetFilters}
       onSelectJob={setSelectedJobId}
       onTrackJob={handleTrackJob}
+      pack={packQuery.data ?? generatePack.data ?? null}
+      packLoading={packQuery.isLoading || packQuery.isFetching || generatePack.isPending}
+      onGeneratePack={handleGeneratePack}
     />
   );
 }

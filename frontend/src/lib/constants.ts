@@ -11,11 +11,13 @@ export const defaultPreferenceForm = {
 
 export type JobFilters = {
   search: string;
-  sortBy: "score" | "recent" | "salary";
+  sortBy: "score" | "recent" | "salary" | "ai_score";
   minScore: number;
   includeSkipped: boolean;
   remoteTypes: string;
 };
+
+export const PIPELINE_STATUSES = ["applied", "interview", "rejected", "offer", "no_response"] as const;
 
 export const defaultJobFilters: JobFilters = {
   search: "",

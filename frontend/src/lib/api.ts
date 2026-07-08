@@ -5,14 +5,18 @@ import {
   setTokens,
 } from "./cookies";
 import type {
+  ApplicationPack,
   CandidateProfile,
   DashboardStats,
   JobMatch,
   JobPreference,
+  OutcomeIntelligence,
+  StrategyResponse,
   TrackedJob,
   User,
   TelegramLink,
   TelegramStatus,
+  TrackingStatus,
 } from "../types";
 
 const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://localhost:8000/api/v1";
@@ -130,7 +134,7 @@ export const api = {
   getDashboardStats: () => request<DashboardStats>("/dashboard/stats"),
   getJobs: (params: {
     minScore: number;
-    sortBy: "score" | "recent" | "salary";
+    sortBy: "score" | "recent" | "salary" | "ai_score";
     includeSkipped: boolean;
     search: string;
     remoteTypes: string;
@@ -146,18 +150,46 @@ export const api = {
     if (params.remoteTypes.trim()) {
       searchParams.set("remote_types", params.remoteTypes.trim());
     }
-    return request<{ items: JobMatch[]; total: number }>(`/jobs/matches?${searchParams.toString()}`);
+    return request<{ items: JobMatch[]; total: number; ai_scoring_enabled: boolean }>(`/jobs/matches?${searchParams.toString()}`);
   },
-  getTrackedJobs: () => request<TrackedJob[]>("/jobs/tracked"),
-  clearTrackedJobs: (status?: "saved" | "applied" | "skipped") => {
+  getTrackedJobs: (params?: { status?: TrackingStatus; pipelineOnly?: boolean }) => {
+    const searchParams = new URLSearchParams();
+    if (params?.status) searchParams.set("status", params.status);
+    if (params?.pipelineOnly) searchParams.set("pipeline_only", "true");
+    const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
+    return request<TrackedJob[]>(`/jobs/tracked${suffix}`);
+  },
+  updateTrackedJob: (
+    source: string,
+    sourceJobId: string,
+    payload: { status?: TrackingStatus; notes?: string | null; follow_up_at?: string | null },
+  ) =>
+    request<TrackedJob>(`/jobs/tracked/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}`, {
+      method: "PATCH",
+      body: JSON.stringify(payload),
+    }),
+  clearTrackedJobs: (status?: TrackingStatus) => {
     const suffix = status ? `?status=${encodeURIComponent(status)}` : "";
     return request<{ cleared: number }>(`/jobs/tracked${suffix}`, { method: "DELETE" });
   },
-  trackJob: (payload: { status: "saved" | "applied" | "skipped"; score: number; job: JobMatch["job"] }) =>
+  trackJob: (payload: {
+    status: TrackingStatus;
+    score: number;
+    ai_score?: number | null;
+    ai_score_rationale?: string | null;
+    job: JobMatch["job"];
+  }) =>
     request<TrackedJob>("/jobs/actions", {
       method: "POST",
       body: JSON.stringify(payload),
     }),
+  getOutcomeIntelligence: () => request<OutcomeIntelligence>("/analytics/outcomes"),
+  getStrategy: () => request<StrategyResponse>("/analytics/strategy"),
+  generateApplicationPack: (source: string, sourceJobId: string, refresh = false) =>
+    request<ApplicationPack>(
+      `/applications/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}/pack?refresh=${refresh}`,
+      { method: "POST" },
+    ),
   getTelegramStatus: () => request<TelegramStatus>("/telegram/status"),
   getTelegramLink: () => request<TelegramLink>("/telegram/link"),
   updateTelegramSettings: (payload: { notifications_enabled?: boolean; notify_min_score?: number }) =>

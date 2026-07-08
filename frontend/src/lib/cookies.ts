@@ -25,11 +25,11 @@ export function getRefreshToken(): string | null {
   return readCookie(REFRESH_TOKEN_KEY);
 }
 
-export function setAccessToken(token: string) {
+function setAccessToken(token: string) {
   writeCookie(ACCESS_TOKEN_KEY, token, MAX_AGE_SECONDS);
 }
 
-export function setRefreshToken(token: string) {
+function setRefreshToken(token: string) {
   writeCookie(REFRESH_TOKEN_KEY, token, REFRESH_MAX_AGE_SECONDS);
 }
 

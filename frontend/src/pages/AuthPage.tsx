@@ -7,6 +7,7 @@ import { useAuth } from "@/context/AuthContext";
 import { queryKeys } from "@/lib/queryKeys";
 import { api } from "@/lib/api";
 import { setTokens } from "@/lib/cookies";
+import { errorMessage } from "@/lib/errors";
 
 type AuthMode = "login" | "register";
 
@@ -50,7 +51,7 @@ export function AuthPage() {
     await toast.promise(loginMutation.mutateAsync({ email, password, authMode: mode }), {
       loading: mode === "register" ? "Creating account..." : "Signing in...",
       success: mode === "register" ? "Account created" : "Signed in successfully",
-      error: (error) => (error instanceof Error ? error.message : "Authentication failed"),
+      error: (error) => errorMessage(error, "Authentication failed"),
     });
   }
 

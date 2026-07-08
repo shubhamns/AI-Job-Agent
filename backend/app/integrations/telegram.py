@@ -74,6 +74,12 @@ class TelegramClient:
             payload["reply_markup"] = reply_markup
         await self._post("editMessageText", payload)
 
+    async def delete_webhook(self, *, drop_pending_updates: bool = False) -> None:
+        await self._post(
+            "deleteWebhook",
+            {"drop_pending_updates": drop_pending_updates},
+        )
+
     async def get_updates(
         self, offset: int | None = None, timeout: int = 30
     ) -> list[dict[str, Any]]:

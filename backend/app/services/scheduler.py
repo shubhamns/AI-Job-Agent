@@ -4,6 +4,7 @@ import asyncio
 import logging
 from typing import Any
 
+import httpx
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -123,6 +124,10 @@ async def _poll_telegram_updates() -> None:
     telegram = get_telegram_client(settings)
     if telegram is None:
         return
+    try:
+        await telegram.delete_webhook(drop_pending_updates=True)
+    except Exception:
+        logger.warning("Could not reset Telegram webhook before polling", exc_info=True)
     while True:
         try:
             updates = await telegram.get_updates(_update_offset, timeout=30)
@@ -132,6 +137,16 @@ async def _poll_telegram_updates() -> None:
                     await process_telegram_update(update, session)
         except asyncio.CancelledError:
             raise
+        except httpx.HTTPStatusError as exc:
+            if exc.response.status_code == 409:
+                logger.warning(
+                    "Telegram polling conflict: another bot instance or webhook is active. "
+                    "Retrying in 30s. Set TELEGRAM_MODE=disabled locally if this persists."
+                )
+                await asyncio.sleep(30)
+                continue
+            logger.exception("Telegram polling HTTP error")
+            await asyncio.sleep(5)
         except Exception:
             logger.exception("Telegram polling error")
             await asyncio.sleep(5)

@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { DashboardPage } from "@/features/dashboard/DashboardPage";
 import { useClearTrackedJobs, useDashboardStats, useHomeJobMatches, useTrackedJobs } from "@/hooks/queries";
+import { errorMessage } from "@/lib/errors";
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -23,7 +24,7 @@ export function HomePage() {
     await toast.promise(clearTracked.mutateAsync(undefined), {
       loading: "Clearing recent activity...",
       success: (result) => `Cleared ${result.cleared} tracked jobs`,
-      error: (error) => (error instanceof Error ? error.message : "Unable to clear activity"),
+      error: (error) => errorMessage(error, "Unable to clear activity"),
     });
   }
 

@@ -4,6 +4,7 @@ import { PreferencesPage as PreferencesView } from "@/features/preferences/Prefe
 import { usePreferences, useUpdatePreferences } from "@/hooks/queries";
 import { defaultPreferenceForm } from "@/lib/constants";
 import { csvToList } from "@/lib/format";
+import { errorMessage } from "@/lib/errors";
 
 export function PreferencesPage() {
   const preferencesQuery = usePreferences();
@@ -26,7 +27,7 @@ export function PreferencesPage() {
       {
         loading: "Saving preferences...",
         success: "Preferences saved",
-        error: (error) => (error instanceof Error ? error.message : "Save failed"),
+        error: (error) => errorMessage(error, "Save failed"),
       },
     );
   }

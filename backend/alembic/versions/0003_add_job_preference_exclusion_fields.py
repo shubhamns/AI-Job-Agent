@@ -34,8 +34,10 @@ def upgrade() -> None:
             server_default=sa.text("'[]'"),
         ),
     )
-    op.alter_column("job_preferences", "required_excluded_technologies", server_default=None)
-    op.alter_column("job_preferences", "preferred_excluded_technologies", server_default=None)
+    bind = op.get_bind()
+    if bind.dialect.name != "sqlite":
+        op.alter_column("job_preferences", "required_excluded_technologies", server_default=None)
+        op.alter_column("job_preferences", "preferred_excluded_technologies", server_default=None)
 
 
 def downgrade() -> None:
