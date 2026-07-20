@@ -1,7 +1,7 @@
 # AI-Job-Agent
 
-<img width="1453" height="750" alt="image" src="https://github.com/user-attachments/assets/13bcc445-ddea-4d08-8c30-e45b199e589c" />
-<img width="1455" height="734" alt="image" src="https://github.com/user-attachments/assets/1376ed53-0223-4632-ab58-d8962035d304" />
+<img width="1465" height="731" alt="image" src="https://github.com/user-attachments/assets/a7fd7e43-0aff-4df9-8c36-ba39d54a0fb1" />
+<img width="1468" height="755" alt="image" src="https://github.com/user-attachments/assets/7b49f498-4eca-4c7a-a773-2b736bbc51e5" />
 <img width="1453" height="2221" alt="image" src="https://github.com/user-attachments/assets/72c8ce6f-a035-4734-8598-2effd73690d2" />
 
 https://github.com/user-attachments/assets/98c802d7-d488-4425-b2da-fd9016e1bfed
