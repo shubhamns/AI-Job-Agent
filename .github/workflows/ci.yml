@@ -50,6 +50,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build frontend Docker image
-        run: docker build -t ai-job-agent-frontend --build-arg API_BASE_URL=http://127.0.0.1:8000/api/v1 ./frontend
+        run: docker build -t ai-job-agent-frontend --build-arg VITE_API_URL=http://127.0.0.1:8000/api/v1 --build-arg VITE_DEMO_MODE=false ./frontend
       - name: Build backend Docker image
         run: docker build -t ai-job-agent-backend ./backend

@@ -2,7 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { defaultJobFilters, type JobFilters } from "@/lib/constants";
 import { queryKeys } from "@/lib/queryKeys";
 import { api } from "@/lib/api";
-import { hasSession } from "@/lib/cookies";
+import { hasSession } from "@/lib/session";
 import type { CandidateProfile, JobMatch, JobPreference, TelegramStatus, TrackingStatus } from "@/types";
 
 export function useMe() {

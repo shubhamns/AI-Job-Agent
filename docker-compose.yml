@@ -26,7 +26,8 @@ services:
     build:
       context: ./frontend
       args:
-        API_BASE_URL: ${API_BASE_URL:-http://localhost:8000/api/v1}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:8000/api/v1}
+        VITE_DEMO_MODE: ${VITE_DEMO_MODE:-false}
     depends_on:
       - backend
     ports:

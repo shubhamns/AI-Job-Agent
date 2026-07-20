@@ -71,6 +71,9 @@ class Settings(BaseSettings):
     openai_base_url: str = Field(default="https://api.openai.com/v1", alias="OPENAI_BASE_URL")
     ai_scoring_enabled: bool = Field(default=True, alias="AI_SCORING_ENABLED")
     min_evidence_sample_size: int = Field(default=3, alias="MIN_EVIDENCE_SAMPLE_SIZE")
+    demo_mode: bool = Field(default=False, alias="DEMO_MODE")
+    demo_user_email: str = Field(default="demo@ai-job-agent.local", alias="DEMO_USER_EMAIL")
+    demo_user_password: str = Field(default="demo12345678", alias="DEMO_USER_PASSWORD")
 
     @property
     def resolved_database_url(self) -> str:

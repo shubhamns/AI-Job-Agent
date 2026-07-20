@@ -1,9 +1,6 @@
-import {
-  clearTokens,
-  getAccessToken,
-  getRefreshToken,
-  setTokens,
-} from "./cookies";
+import { getErrorMessage, http } from "./axios";
+import { isDemoSession } from "./demo/session";
+import { mockApi } from "./demo/mockApi";
 import type {
   ApplicationPack,
   CandidateProfile,
@@ -19,119 +16,78 @@ import type {
   TrackingStatus,
 } from "../types";
 
-const API_BASE_URL = import.meta.env.API_BASE_URL ?? "http://localhost:8000/api/v1";
-
-type RequestOptions = {
-  method?: string;
-  body?: BodyInit | null;
-  headers?: Record<string, string>;
-  auth?: boolean;
-  retry?: boolean;
-};
-
 type TokenResponse = {
   access_token: string;
   refresh_token: string;
   token_type: string;
 };
 
-let refreshPromise: Promise<string | null> | null = null;
+const publicRequest = { headers: { "X-Skip-Auth": "true" } };
 
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) {
-    clearTokens();
-    return null;
+async function request<T>(
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE",
+  path: string,
+  options?: { body?: unknown; auth?: boolean; formData?: FormData },
+): Promise<T> {
+  try {
+    const response = await http.request<T>({
+      method,
+      url: path,
+      data: options?.formData ?? options?.body,
+      ...(options?.auth === false ? publicRequest : {}),
+      ...(options?.formData ? { headers: { "Content-Type": "multipart/form-data" } } : {}),
+    });
+    return response.data;
+  } catch (error) {
+    throw new Error(getErrorMessage(error));
   }
-  const response = await fetch(`${API_BASE_URL}/auth/refresh`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ refresh_token: refreshToken }),
-  });
-  if (!response.ok) {
-    clearTokens();
-    return null;
-  }
-  const payload = (await response.json()) as TokenResponse;
-  setTokens(payload.access_token, payload.refresh_token);
-  return payload.access_token;
 }
 
-async function request<T>(path: string, options: RequestOptions = {}): Promise<T> {
-  const useAuth = options.auth !== false;
-  const token = useAuth ? getAccessToken() : null;
-  const response = await fetch(`${API_BASE_URL}${path}`, {
-    method: options.method ?? "GET",
-    body: options.body ?? null,
-    headers: {
-      ...(options.body instanceof FormData ? {} : { "Content-Type": "application/json" }),
-      ...(token ? { Authorization: `Bearer ${token}` } : {}),
-      ...options.headers,
-    },
-  });
-  if (response.status === 401 && useAuth && options.retry !== false) {
-    if (!refreshPromise) {
-      refreshPromise = refreshAccessToken().finally(() => {
-        refreshPromise = null;
-      });
-    }
-    const nextToken = await refreshPromise;
-    if (nextToken) {
-      return request<T>(path, { ...options, retry: false });
-    }
-    throw new Error("Session expired. Please sign in again.");
+function useMock<T>(mockCall: () => Promise<T>, realCall: () => Promise<T>): Promise<T> {
+  if (isDemoSession()) {
+    return mockCall();
   }
-  if (!response.ok) {
-    let detail = "Request failed.";
-    try {
-      const payload = (await response.json()) as { detail?: string };
-      detail = payload.detail ?? detail;
-    } catch {
-      detail = response.statusText || detail;
-    }
-    throw new Error(detail);
-  }
-  if (response.status === 204) {
-    return undefined as T;
-  }
-  return (await response.json()) as T;
+  return realCall();
 }
 
 export const api = {
   register: (email: string, password: string) =>
-    request<User>("/auth/register", {
-      method: "POST",
+    request<User>("POST", "/auth/register", {
       auth: false,
-      body: JSON.stringify({ email, password }),
+      body: { email, password },
     }),
   login: (email: string, password: string) =>
-    request<TokenResponse>("/auth/login", {
-      method: "POST",
+    request<TokenResponse>("POST", "/auth/login", {
       auth: false,
-      body: JSON.stringify({ email, password }),
+      body: { email, password },
     }),
-  me: () => request<User>("/auth/me"),
-  getProfile: () => request<CandidateProfile | null>("/profile"),
+  me: () => useMock(() => mockApi.me(), () => request<User>("GET", "/auth/me")),
+  getProfile: () => useMock(() => mockApi.getProfile(), () => request<CandidateProfile | null>("GET", "/profile")),
   updateProfile: (payload: Omit<CandidateProfile, "id" | "user_id">) =>
-    request<CandidateProfile>("/profile", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    }),
-  getPreferences: () => request<JobPreference | null>("/profile/preferences"),
+    useMock(
+      () => mockApi.updateProfile(payload),
+      () => request<CandidateProfile>("PUT", "/profile", { body: payload }),
+    ),
+  getPreferences: () =>
+    useMock(() => mockApi.getPreferences(), () => request<JobPreference | null>("GET", "/profile/preferences")),
   updatePreferences: (payload: Omit<JobPreference, "id" | "user_id">) =>
-    request<JobPreference>("/profile/preferences", {
-      method: "PUT",
-      body: JSON.stringify(payload),
-    }),
+    useMock(
+      () => mockApi.updatePreferences(payload),
+      () => request<JobPreference>("PUT", "/profile/preferences", { body: payload }),
+    ),
   uploadResume: (file: File) => {
+    if (isDemoSession()) {
+      void file;
+      return mockApi.uploadResume();
+    }
     const formData = new FormData();
     formData.append("file", file);
-    return request<{ extracted_text: string; profile: CandidateProfile | null }>("/resumes", {
-      method: "POST",
-      body: formData,
+    return request<{ extracted_text: string; profile: CandidateProfile | null }>("POST", "/resumes", {
+      formData,
     });
   },
-  getDashboardStats: () => request<DashboardStats>("/dashboard/stats"),
+  getDashboardStats: () =>
+    useMock(() => mockApi.getDashboardStats(), () => request<DashboardStats>("GET", "/dashboard/stats")),
   getJobs: (params: {
     minScore: number;
     sortBy: "score" | "recent" | "salary" | "ai_score";
@@ -139,6 +95,9 @@ export const api = {
     search: string;
     remoteTypes: string;
   }) => {
+    if (isDemoSession()) {
+      return mockApi.getJobs(params);
+    }
     const searchParams = new URLSearchParams({
       min_score: String(params.minScore),
       sort_by: params.sortBy,
@@ -150,30 +109,44 @@ export const api = {
     if (params.remoteTypes.trim()) {
       searchParams.set("remote_types", params.remoteTypes.trim());
     }
-    return request<{ items: JobMatch[]; total: number; ai_scoring_enabled: boolean }>(`/jobs/matches?${searchParams.toString()}`);
+    return request<{ items: JobMatch[]; total: number; ai_scoring_enabled: boolean }>(
+      "GET",
+      `/jobs/matches?${searchParams.toString()}`,
+    );
   },
   getTrackedJobs: (params?: { status?: TrackingStatus; pipelineOnly?: boolean }) => {
+    if (isDemoSession()) {
+      return mockApi.getTrackedJobs(params);
+    }
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.set("status", params.status);
     if (params?.pipelineOnly) searchParams.set("pipeline_only", "true");
     const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
-    return request<TrackedJob[]>(`/jobs/tracked${suffix}`);
+    return request<TrackedJob[]>("GET", `/jobs/tracked${suffix}`);
   },
   updateTrackedJob: (
     source: string,
     sourceJobId: string,
     payload: { status?: TrackingStatus; notes?: string | null; follow_up_at?: string | null },
   ) =>
-    request<TrackedJob>(`/jobs/tracked/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}`, {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    }),
+    useMock(
+      () => mockApi.updateTrackedJob(source, sourceJobId, payload),
+      () =>
+        request<TrackedJob>(
+          "PATCH",
+          `/jobs/tracked/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}`,
+          { body: payload },
+        ),
+    ),
   clearTrackedJobs: (params?: { status?: TrackingStatus; limit?: number }) => {
+    if (isDemoSession()) {
+      return mockApi.clearTrackedJobs(params);
+    }
     const searchParams = new URLSearchParams();
     if (params?.status) searchParams.set("status", params.status);
     if (params?.limit) searchParams.set("limit", String(params.limit));
     const suffix = searchParams.toString() ? `?${searchParams.toString()}` : "";
-    return request<{ cleared: number }>(`/jobs/tracked${suffix}`, { method: "DELETE" });
+    return request<{ cleared: number }>("DELETE", `/jobs/tracked${suffix}`);
   },
   trackJob: (payload: {
     status: TrackingStatus;
@@ -182,22 +155,31 @@ export const api = {
     ai_score_rationale?: string | null;
     job: JobMatch["job"];
   }) =>
-    request<TrackedJob>("/jobs/actions", {
-      method: "POST",
-      body: JSON.stringify(payload),
-    }),
-  getOutcomeIntelligence: () => request<OutcomeIntelligence>("/analytics/outcomes"),
-  getStrategy: () => request<StrategyResponse>("/analytics/strategy"),
-  generateApplicationPack: (source: string, sourceJobId: string, refresh = false) =>
-    request<ApplicationPack>(
-      `/applications/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}/pack?refresh=${refresh}`,
-      { method: "POST" },
+    useMock(
+      () => mockApi.trackJob(payload),
+      () => request<TrackedJob>("POST", "/jobs/actions", { body: payload }),
     ),
-  getTelegramStatus: () => request<TelegramStatus>("/telegram/status"),
-  getTelegramLink: () => request<TelegramLink>("/telegram/link"),
+  getOutcomeIntelligence: () =>
+    useMock(() => mockApi.getOutcomeIntelligence(), () => request<OutcomeIntelligence>("GET", "/analytics/outcomes")),
+  getStrategy: () =>
+    useMock(() => mockApi.getStrategy(), () => request<StrategyResponse>("GET", "/analytics/strategy")),
+  generateApplicationPack: (source: string, sourceJobId: string, refresh = false) => {
+    if (isDemoSession()) {
+      void refresh;
+      return mockApi.generateApplicationPack(source, sourceJobId);
+    }
+    return request<ApplicationPack>(
+      "POST",
+      `/applications/${encodeURIComponent(source)}/${encodeURIComponent(sourceJobId)}/pack?refresh=${refresh}`,
+    );
+  },
+  getTelegramStatus: () =>
+    useMock(() => mockApi.getTelegramStatus(), () => request<TelegramStatus>("GET", "/telegram/status")),
+  getTelegramLink: () =>
+    useMock(() => mockApi.getTelegramLink(), () => request<TelegramLink>("GET", "/telegram/link")),
   updateTelegramSettings: (payload: { notifications_enabled?: boolean; notify_min_score?: number }) =>
-    request<TelegramStatus>("/telegram/settings", {
-      method: "PATCH",
-      body: JSON.stringify(payload),
-    }),
+    useMock(
+      () => mockApi.updateTelegramSettings(payload),
+      () => request<TelegramStatus>("PATCH", "/telegram/settings", { body: payload }),
+    ),
 };

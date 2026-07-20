@@ -5,12 +5,10 @@ import { defineConfig, loadEnv } from "vite";
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, __dirname, "");
-  const apiBaseUrl = env.API_BASE_URL ?? process.env.API_BASE_URL ?? "http://localhost:8000/api/v1";
+  const proxyTarget = env.VITE_API_PROXY_TARGET || "http://localhost:8002";
+
   return {
     plugins: [react(), tailwindcss()],
-    define: {
-      "import.meta.env.API_BASE_URL": JSON.stringify(apiBaseUrl),
-    },
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./src"),
@@ -20,6 +18,12 @@ export default defineConfig(({ mode }) => {
       port: 5173,
       strictPort: true,
       host: true,
+      proxy: {
+        "/api/v1": {
+          target: proxyTarget,
+          changeOrigin: true,
+        },
+      },
     },
   };
 });

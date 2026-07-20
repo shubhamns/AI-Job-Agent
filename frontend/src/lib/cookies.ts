@@ -44,7 +44,3 @@ export function clearTokens() {
   deleteCookie(LEGACY_TOKEN_KEY);
   localStorage.removeItem(LEGACY_TOKEN_KEY);
 }
-
-export function hasSession(): boolean {
-  return Boolean(getAccessToken() || getRefreshToken());
-}

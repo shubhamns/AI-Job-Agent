@@ -70,3 +70,26 @@ async def refresh_tokens(
 @router.get("/me", response_model=UserResponse)
 async def get_me(user: CurrentUser) -> UserResponse:
     return UserResponse.model_validate(user)
+
+
+@router.post("/demo", response_model=TokenResponse)
+async def demo_login(
+    session: DbSession,
+    settings: AppSettings,
+) -> TokenResponse:
+    if not settings.demo_mode:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Demo mode is disabled.",
+        )
+    user = await session.scalar(select(User).where(User.email == settings.demo_user_email))
+    if not user:
+        user = User(
+            email=settings.demo_user_email,
+            hashed_password=hash_password(settings.demo_user_password),
+        )
+        session.add(user)
+        await session.commit()
+        await session.refresh(user)
+    access_token, refresh_token = create_token_pair(user.email, settings)
+    return TokenResponse(access_token=access_token, refresh_token=refresh_token)

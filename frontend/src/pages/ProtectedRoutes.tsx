@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { useAuth } from "@/context/AuthContext";
+import { env } from "@/lib/env";
 import { HomePage } from "@/pages/HomePage";
 import { JobsPage } from "@/pages/JobsPage";
 import { PreferencesPage } from "@/pages/PreferencesPage";
@@ -12,7 +13,7 @@ import { StrategyPage } from "@/features/strategy/StrategyPage";
 export function ProtectedRoutes() {
   const { user, logout } = useAuth();
   if (!user) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={env.demoMode ? "/" : "/login"} replace />;
   }
   return (
     <AppLayout email={user.email} onLogout={logout}>

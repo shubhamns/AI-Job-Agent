@@ -3,13 +3,16 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { queryKeys } from "@/lib/queryKeys";
-import { clearTokens, hasSession } from "@/lib/cookies";
+import { resetDemoStore } from "@/lib/demo/mockApi";
+import { clearSession, hasSession, isDemoSession } from "@/lib/session";
+import { env } from "@/lib/env";
 import { useMe } from "@/hooks/queries";
 import type { User } from "@/types";
 
 type AuthContextValue = {
   user: User | null;
   bootLoading: boolean;
+  isDemo: boolean;
   setUser: (user: User | null) => void;
   logout: () => void;
 };
@@ -20,17 +23,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const session = hasSession();
+  const demo = isDemoSession();
   const { data: user = null, isLoading, isError } = useMe();
 
   useEffect(() => {
-    if (!isError) {
+    if (demo || !isError) {
       return;
     }
     toast.error("Session expired. Please sign in again.");
-    clearTokens();
+    clearSession();
+    resetDemoStore();
     queryClient.clear();
-    navigate("/login");
-  }, [isError, navigate, queryClient]);
+    navigate(env.demoMode ? "/" : "/login");
+  }, [demo, isError, navigate, queryClient]);
 
   function setUser(nextUser: User | null) {
     if (nextUser) {
@@ -41,10 +46,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }
 
   function logout() {
-    clearTokens();
+    clearSession();
+    resetDemoStore();
     queryClient.clear();
     toast.info("Signed out");
-    navigate("/login");
+    navigate(env.demoMode ? "/" : "/login");
   }
 
   return (
@@ -52,6 +58,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         user: session ? user : null,
         bootLoading: session && isLoading,
+        isDemo: demo,
         setUser,
         logout,
       }}
