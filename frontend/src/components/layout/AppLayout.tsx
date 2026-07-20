@@ -52,7 +52,7 @@ function NavSection({
               "group flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
               isActive
                 ? "bg-gradient-to-r from-primary/15 via-cyan-500/10 to-transparent text-primary shadow-[inset_0_0_0_1px_oklch(0.74_0.14_192/0.2)]"
-                : "text-muted-foreground hover:bg-muted/60 hover:text-foreground",
+                : "text-muted-foreground hover:bg-white/70 hover:text-foreground",
             )
           }
         >
@@ -61,7 +61,7 @@ function NavSection({
               <span
                 className={cn(
                   "flex size-8 items-center justify-center rounded-lg transition-colors",
-                  isActive ? "gradient-primary text-white shadow-sm" : "bg-muted/60 text-muted-foreground group-hover:text-primary",
+                  isActive ? "gradient-primary text-white shadow-sm" : "bg-white/80 text-muted-foreground group-hover:text-primary",
                 )}
               >
                 <Icon className="size-4" />
@@ -110,7 +110,7 @@ export function AppLayout({
           </nav>
 
           <div className="mt-4 space-y-3 border-t border-border/60 pt-4">
-            <div className="flex items-center gap-3 rounded-2xl bg-muted/50 p-3 ring-1 ring-border/80">
+            <div className="flex items-center gap-3 rounded-2xl bg-white/70 p-3 ring-1 ring-border/60">
               <div className="gradient-primary flex size-10 shrink-0 items-center justify-center rounded-xl text-xs font-bold text-white">
                 {userInitials(email)}
               </div>
@@ -166,7 +166,7 @@ export function AppLayout({
                 <span
                   className={cn(
                     "rounded-xl p-2 transition-all",
-                    active ? "gradient-primary text-white shadow-md shadow-primary/30" : "bg-muted/60",
+                    active ? "gradient-primary text-white shadow-md shadow-primary/30" : "bg-white/70",
                   )}
                 >
                   <Icon className="size-4" />

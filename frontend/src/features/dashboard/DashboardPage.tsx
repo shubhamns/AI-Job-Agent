@@ -16,10 +16,10 @@ import { trackingStatusLabel, trackingStatusVariant } from "@/lib/tracking";
 import type { DashboardStats, JobMatch, TrackedJob } from "@/types";
 
 const statMeta = [
-  { key: "saved", label: "Saved", icon: Target, tone: "from-teal-500/20 to-teal-500/5 text-teal-300" },
-  { key: "applied", label: "Applied", icon: Briefcase, tone: "from-cyan-500/20 to-cyan-500/5 text-cyan-300" },
-  { key: "interview", label: "Interviews", icon: TrendingUp, tone: "from-emerald-500/20 to-emerald-500/5 text-emerald-300" },
-  { key: "offer", label: "Offers", icon: Sparkles, tone: "from-sky-500/20 to-sky-500/5 text-sky-300" },
+  { key: "saved", label: "Saved", icon: Target, tone: "from-teal-500/15 to-teal-500/5 text-teal-700" },
+  { key: "applied", label: "Applied", icon: Briefcase, tone: "from-cyan-500/15 to-cyan-500/5 text-cyan-700" },
+  { key: "interview", label: "Interviews", icon: TrendingUp, tone: "from-emerald-500/15 to-emerald-500/5 text-emerald-700" },
+  { key: "offer", label: "Offers", icon: Sparkles, tone: "from-sky-500/15 to-sky-500/5 text-sky-700" },
 ] as const;
 
 function StatCard({
@@ -42,7 +42,7 @@ function StatCard({
               <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{label}</p>
               <p className="mt-2 text-3xl font-bold tracking-tight">{value}</p>
             </div>
-            <div className="rounded-xl bg-muted/50 p-2.5 shadow-sm">
+            <div className="rounded-xl bg-white/70 p-2.5 shadow-sm">
               <Icon className="size-5" />
             </div>
           </div>
@@ -66,7 +66,7 @@ function JobRow({
   return (
     <button
       type="button"
-      className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-muted/30 p-4 text-left transition-all hover:border-primary/25 hover:bg-muted/60 hover:shadow-md hover:shadow-primary/5"
+      className="group flex w-full items-center justify-between gap-3 rounded-2xl border border-border bg-white/70 p-4 text-left transition-all hover:border-primary/25 hover:bg-white hover:shadow-md hover:shadow-primary/5"
       onClick={onClick}
     >
       <div className="min-w-0">
@@ -125,7 +125,7 @@ export function DashboardPage({
         description="Your pipeline, follow-ups, and best matches — all in one calm workspace."
       />
 
-      <Card className="overflow-hidden border-0 bg-gradient-to-br from-teal-600 via-cyan-700 to-blue-800 text-white shadow-xl shadow-black/40">
+      <Card className="overflow-hidden border-0 bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-700 text-white shadow-xl shadow-teal-500/20">
         <CardContent className="relative p-6 md:p-8">
           <div className="absolute -right-8 -top-8 size-40 rounded-full bg-white/10 blur-2xl" />
           <div className="relative flex flex-col gap-4 md:flex-row md:items-center md:justify-between">

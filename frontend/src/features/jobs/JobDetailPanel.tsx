@@ -118,7 +118,7 @@ function ApplicationPackPanel({
             {pack.verified_claims.map((claim) => (
               <div
                 key={claim.claim}
-                className="flex items-start justify-between gap-2 rounded-xl border border-border bg-muted/40 p-3 text-sm"
+                className="flex items-start justify-between gap-2 rounded-xl border border-border bg-white/60 p-3 text-sm"
               >
                 <span className="text-muted-foreground">{claim.claim}</span>
                 <Badge variant={claim.verified ? "success" : "warning"}>
@@ -168,7 +168,7 @@ export function JobDetailPanel({
         </Button>
       ) : null}
 
-      <Card className="overflow-hidden border-0 shadow-xl shadow-black/30">
+      <Card className="overflow-hidden border-0 shadow-xl shadow-teal-500/15">
         <div className="gradient-hero relative px-6 py-6 text-white md:px-8">
           <div className="absolute -right-10 -top-10 size-40 rounded-full bg-white/10 blur-2xl" />
           <div className="relative flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -217,7 +217,7 @@ export function JobDetailPanel({
         </div>
 
         {job.ai_fit ? (
-          <div className="border-b border-border/50 bg-cyan-500/8 px-6 py-4 md:px-8">
+          <div className="border-b border-border/50 bg-teal-500/5 px-6 py-4 md:px-8">
             <p className="text-sm leading-relaxed text-muted-foreground">
               <span className="font-semibold text-foreground">AI rationale: </span>
               {job.ai_fit.rationale}
@@ -226,7 +226,7 @@ export function JobDetailPanel({
         ) : null}
       </Card>
 
-      <div className="sticky bottom-20 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
+      <div className="sticky bottom-20 z-10 flex flex-wrap gap-2 rounded-2xl border border-border bg-white/90 p-3 shadow-lg backdrop-blur-md lg:static lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none">
         <Button onClick={() => void onTrackJob("saved", job)}>Save</Button>
         <Button variant="secondary" onClick={() => void onTrackJob("applied", job)}>
           Applied

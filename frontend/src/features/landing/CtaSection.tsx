@@ -20,7 +20,7 @@ export function CtaSection({
         viewport={{ once: true }}
         transition={{ duration: 0.6 }}
       >
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-teal-600 via-cyan-700 to-blue-800 px-6 py-12 text-center text-white shadow-2xl shadow-black/40 md:px-12 md:py-16">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-700 px-6 py-12 text-center text-white shadow-2xl shadow-teal-500/20 md:px-12 md:py-16">
           <div className="pointer-events-none absolute -right-16 -top-16 size-48 rounded-full bg-white/10 blur-3xl" />
           <h2 className="relative text-3xl font-bold tracking-tight md:text-4xl">Ready to run your job search?</h2>
           <p className="relative mx-auto mt-4 max-w-xl text-white/80">
@@ -37,7 +37,7 @@ export function CtaSection({
             ) : null}
             <Button
               size="lg"
-              className="bg-foreground text-background hover:bg-foreground/90"
+              className="bg-white text-teal-700 hover:bg-white/90"
               variant={env.demoMode ? "secondary" : "default"}
               asChild
             >

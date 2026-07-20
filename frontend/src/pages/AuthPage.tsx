@@ -49,7 +49,7 @@ export function AuthPage() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
       <div className="relative hidden overflow-hidden lg:flex lg:flex-col lg:justify-between lg:p-12">
-        <div className="absolute inset-0 bg-gradient-to-br from-teal-700 via-cyan-800 to-slate-900" />
+        <div className="absolute inset-0 bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-700" />
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(255,255,255,0.18),transparent_40%)]" />
         <div className="relative flex items-center gap-3">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-white/15 backdrop-blur-sm">

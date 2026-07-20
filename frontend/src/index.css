@@ -2,26 +2,26 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", ui-sans-serif, system-ui, sans-serif;
-  --color-background: oklch(0.16 0.022 250);
-  --color-foreground: oklch(0.94 0.01 250);
-  --color-card: oklch(0.2 0.028 250);
-  --color-card-foreground: oklch(0.94 0.01 250);
-  --color-primary: oklch(0.74 0.14 192);
-  --color-primary-foreground: oklch(0.14 0.025 250);
-  --color-secondary: oklch(0.24 0.03 250);
-  --color-secondary-foreground: oklch(0.88 0.02 250);
-  --color-muted: oklch(0.23 0.028 250);
-  --color-muted-foreground: oklch(0.62 0.025 250);
-  --color-accent: oklch(0.26 0.04 192);
-  --color-accent-foreground: oklch(0.92 0.02 192);
-  --color-destructive: oklch(0.62 0.2 25);
-  --color-border: oklch(0.29 0.028 250);
-  --color-input: oklch(0.22 0.028 250);
-  --color-ring: oklch(0.74 0.14 192);
-  --color-success: oklch(0.72 0.14 155);
-  --color-warning: oklch(0.78 0.14 75);
-  --color-surface: oklch(0.18 0.025 250);
-  --color-sidebar: oklch(0.18 0.028 252);
+  --color-background: oklch(0.985 0.006 220);
+  --color-foreground: oklch(0.2 0.03 250);
+  --color-card: oklch(1 0.002 220);
+  --color-card-foreground: oklch(0.2 0.03 250);
+  --color-primary: oklch(0.52 0.13 192);
+  --color-primary-foreground: oklch(0.99 0 0);
+  --color-secondary: oklch(0.96 0.015 220);
+  --color-secondary-foreground: oklch(0.32 0.05 250);
+  --color-muted: oklch(0.955 0.012 220);
+  --color-muted-foreground: oklch(0.48 0.03 250);
+  --color-accent: oklch(0.94 0.03 192);
+  --color-accent-foreground: oklch(0.28 0.06 192);
+  --color-destructive: oklch(0.55 0.22 25);
+  --color-border: oklch(0.9 0.015 220);
+  --color-input: oklch(0.97 0.01 220);
+  --color-ring: oklch(0.52 0.13 192);
+  --color-success: oklch(0.58 0.14 155);
+  --color-warning: oklch(0.68 0.14 75);
+  --color-surface: oklch(0.99 0.004 220);
+  --color-sidebar: oklch(0.995 0.005 220);
   --radius-sm: 0.625rem;
   --radius-md: 0.875rem;
   --radius-lg: 1.125rem;
@@ -36,15 +36,15 @@
   html {
     -webkit-tap-highlight-color: transparent;
     font-family: var(--font-sans);
-    color-scheme: dark;
+    color-scheme: light;
   }
   body {
     @apply bg-background text-foreground antialiased;
     background-color: var(--color-background);
     background-image:
-      radial-gradient(ellipse 70% 55% at 0% -5%, oklch(0.35 0.08 192 / 0.22), transparent 55%),
-      radial-gradient(ellipse 55% 45% at 100% 0%, oklch(0.32 0.07 250 / 0.18), transparent 50%),
-      radial-gradient(ellipse 50% 40% at 50% 100%, oklch(0.28 0.06 220 / 0.12), transparent 55%);
+      radial-gradient(ellipse 75% 50% at 0% -5%, oklch(0.88 0.06 192 / 0.35), transparent 55%),
+      radial-gradient(ellipse 60% 45% at 100% 0%, oklch(0.9 0.05 220 / 0.3), transparent 50%),
+      radial-gradient(ellipse 50% 40% at 50% 100%, oklch(0.92 0.04 200 / 0.2), transparent 55%);
     min-height: 100dvh;
   }
 }
@@ -57,21 +57,21 @@
     padding-top: max(0.75rem, env(safe-area-inset-top));
   }
   .glass-panel {
-    @apply border border-white/8 bg-card/85 shadow-[0_8px_40px_-12px_oklch(0_0_0/0.55)] backdrop-blur-xl;
+    @apply border border-white/80 bg-white/75 shadow-[0_8px_40px_-12px_oklch(0.4_0.06_220/0.15)] backdrop-blur-xl;
   }
   .glass-card {
-    @apply rounded-2xl border border-white/8 bg-card/90 shadow-[0_4px_24px_-8px_oklch(0_0_0/0.45)] backdrop-blur-sm;
+    @apply rounded-2xl border border-white/90 bg-white/85 shadow-[0_4px_24px_-8px_oklch(0.4_0.05_220/0.12)] backdrop-blur-sm;
   }
   .gradient-text {
-    @apply bg-gradient-to-r from-teal-300 via-cyan-300 to-sky-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-teal-600 via-cyan-600 to-blue-600 bg-clip-text text-transparent;
   }
   .gradient-primary {
     @apply bg-gradient-to-r from-teal-500 via-cyan-500 to-blue-600;
   }
   .gradient-hero {
-    @apply bg-gradient-to-br from-teal-600 via-cyan-700 to-blue-800;
+    @apply bg-gradient-to-br from-teal-500 via-cyan-600 to-blue-700;
   }
   .surface-hover {
-    @apply border-border/80 bg-muted/40 hover:border-primary/25 hover:bg-muted/70;
+    @apply border-border bg-white/70 hover:border-primary/25 hover:bg-white hover:shadow-md hover:shadow-primary/5;
   }
 }

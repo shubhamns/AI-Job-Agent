@@ -57,7 +57,7 @@ export function JobListItem({
           <div className="flex shrink-0 flex-col items-end gap-1">
             <span className="rounded-lg bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">{match.score}</span>
             {match.ai_fit ? (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-cyan-400">
+              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-cyan-600">
                 <Sparkles className="size-3" />
                 {match.ai_fit.score}
               </span>
@@ -87,7 +87,7 @@ export function JobListItem({
 export function JobListEmpty() {
   return (
     <div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-primary/20 bg-primary/5 px-6 py-10 text-center">
-      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-muted/60 shadow-sm">
+      <div className="mb-3 flex size-12 items-center justify-center rounded-2xl bg-white/80 shadow-sm">
         <Briefcase className="size-6 text-primary" />
       </div>
       <p className="font-semibold">No matches found</p>

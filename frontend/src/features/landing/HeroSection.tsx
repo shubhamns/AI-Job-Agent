@@ -31,11 +31,11 @@ export function HeroSection({
     <section className="relative overflow-hidden pt-32 pb-20 md:pt-40 md:pb-28">
       <div
         aria-hidden
-        className="pointer-events-none absolute -top-32 left-1/2 size-[600px] -translate-x-1/2 rounded-full bg-cyan-500/10 blur-3xl"
+        className="pointer-events-none absolute -top-32 left-1/2 size-[600px] -translate-x-1/2 rounded-full bg-teal-400/15 blur-3xl"
       />
       <div className="relative mx-auto max-w-6xl px-4 text-center">
         <motion.div initial="hidden" animate="visible" variants={fadeUp(0)}>
-          <Badge variant="outline" className="mb-6 border-primary/30 bg-muted/40 px-4 py-1.5 text-primary backdrop-blur-sm">
+          <Badge variant="outline" className="mb-6 border-primary/25 bg-white/70 px-4 py-1.5 text-primary backdrop-blur-sm">
             Job search workspace for India
           </Badge>
         </motion.div>

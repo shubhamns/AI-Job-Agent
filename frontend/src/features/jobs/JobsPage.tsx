@@ -121,7 +121,7 @@ function FiltersBar({
             ))}
           </div>
 
-          <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-muted/30 px-3 py-2 text-sm lg:shrink-0">
+          <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-border bg-white/60 px-3 py-2 text-sm lg:shrink-0">
             <input
               checked={filters.includeSkipped}
               onChange={(event) => onChange({ ...filters, includeSkipped: event.target.checked })}

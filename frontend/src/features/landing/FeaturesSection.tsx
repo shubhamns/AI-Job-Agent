@@ -14,37 +14,37 @@ const features = [
     icon: FileText,
     title: "Resume → Profile",
     description: "Upload PDF or DOCX and get a structured profile you can refine before searching.",
-    color: "from-teal-500/25 to-teal-500/8 text-teal-300",
+    color: "from-teal-500/20 to-teal-500/5 text-teal-700",
   },
   {
     icon: Target,
     title: "Smart matching",
     description: "Deterministic scoring plus optional AI fit scores, filters, and exclusion rules.",
-    color: "from-cyan-500/25 to-cyan-500/8 text-cyan-300",
+    color: "from-cyan-500/20 to-cyan-500/5 text-cyan-700",
   },
   {
     icon: Briefcase,
     title: "Pipeline tracker",
     description: "Move jobs through saved, applied, interview, offer, and follow-up stages.",
-    color: "from-emerald-500/25 to-emerald-500/8 text-emerald-300",
+    color: "from-emerald-500/20 to-emerald-500/5 text-emerald-700",
   },
   {
     icon: BarChart3,
     title: "Outcome intelligence",
     description: "See which roles, skills, and sources actually lead to interviews.",
-    color: "from-sky-500/25 to-sky-500/8 text-sky-300",
+    color: "from-sky-500/20 to-sky-500/5 text-sky-700",
   },
   {
     icon: Lightbulb,
     title: "Strategy agent",
     description: "Evidence-backed recommendations separated from AI suggestions.",
-    color: "from-blue-500/25 to-blue-500/8 text-blue-300",
+    color: "from-blue-500/20 to-blue-500/5 text-blue-700",
   },
   {
     icon: Sparkles,
     title: "Application packs",
     description: "Tailored CV tweaks, cover letters, and ATS checks for each role.",
-    color: "from-teal-400/25 to-teal-400/8 text-teal-200",
+    color: "from-teal-400/20 to-teal-400/5 text-teal-600",
   },
 ];
 
