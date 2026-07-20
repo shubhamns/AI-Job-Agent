@@ -1,12 +1,10 @@
 # AI-Job-Agent
 
+<img width="1453" height="750" alt="image" src="https://github.com/user-attachments/assets/13bcc445-ddea-4d08-8c30-e45b199e589c" />
+<img width="1455" height="734" alt="image" src="https://github.com/user-attachments/assets/1376ed53-0223-4632-ab58-d8962035d304" />
+<img width="1453" height="2221" alt="image" src="https://github.com/user-attachments/assets/72c8ce6f-a035-4734-8598-2effd73690d2" />
+
 https://github.com/user-attachments/assets/98c802d7-d488-4425-b2da-fd9016e1bfed
-
-<img width="1462" height="750" alt="image" src="https://github.com/user-attachments/assets/7f48c4fa-6557-4fb8-bc52-cffd9a017be5" />
-<img width="1462" height="750" alt="image" src="https://github.com/user-attachments/assets/90c4bc4e-82cd-45b5-9a0f-2d6e3874a063" />
-
-
-<img width="1170" height="2221" alt="image" src="https://github.com/user-attachments/assets/72c8ce6f-a035-4734-8598-2effd73690d2" />
 
 AI-Job-Agent is a portfolio-grade full-stack job search workspace built around a simple principle: make the workflow explicit, deterministic, and trackable.
 
